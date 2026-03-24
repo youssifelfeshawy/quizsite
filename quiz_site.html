@@ -1,703 +1,920 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Quiz Player</title>
+    <title>Quiz Player</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #1a1a2e;
-            --bg-secondary: #16213e;
-            --bg-card: #0f3460;
-            --text-primary: #eee;
-            --text-secondary: #bbb;
-            --accent: #3498db;
-            --accent-hover: #2980b9;
-            --correct: #2ecc71;
-            --wrong: #e74c3c;
-            --border: #2c3e50;
+            --bg: #0d0d14;
+            --surface: #13131f;
+            --card: #1a1a2b;
+            --border: #2a2a40;
+            --text: #e8e8f0;
+            --muted: #7070a0;
+            --accent: #6c63ff;
+            --accent2: #ff6b9d;
+            --correct: #22d3a0;
+            --wrong: #ff5c7a;
+            --glow: rgba(108,99,255,0.25);
         }
-
-        body.light-mode {
-            --bg-primary: #eef2f3;
-            --bg-secondary: #fff;
-            --bg-card: #fff;
-            --text-primary: #2c3e50;
-            --text-secondary: #7f8c8d;
-            --accent: #3498db;
-            --accent-hover: #2980b9;
-            --correct: #2ecc71;
-            --wrong: #e74c3c;
-            --border: #ecf0f1;
+        body.light {
+            --bg: #f0f0f8;
+            --surface: #ffffff;
+            --card: #ffffff;
+            --border: #e0e0ee;
+            --text: #1a1a2b;
+            --muted: #8080aa;
+            --accent: #5a52e0;
+            --accent2: #e0547e;
+            --correct: #18b88a;
+            --wrong: #e04060;
+            --glow: rgba(90,82,224,0.15);
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            display: flex;
-            justify-content: center;
-            padding: 20px;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
             min-height: 100vh;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 30px 16px 60px;
+            transition: background 0.4s, color 0.4s;
         }
 
-        .container {
-            background: var(--bg-card);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            width: 100%;
-            max-width: 700px;
+        /* Ambient background glow */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -200px; left: 50%;
+            transform: translateX(-50%);
+            width: 700px; height: 500px;
+            background: radial-gradient(ellipse, var(--glow) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
         }
 
         .theme-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
+            position: fixed; top: 20px; right: 20px; z-index: 100;
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 50px; padding: 6px;
+            cursor: pointer; display: flex; align-items: center;
+            gap: 6px; font-size: 18px;
+            transition: all 0.3s;
+        }
+        .theme-toggle:hover { border-color: var(--accent); }
+
+        .wrap {
+            position: relative; z-index: 1;
+            width: 100%; max-width: 720px;
         }
 
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 34px;
-        }
+        /* ===== SELECTION SCREEN ===== */
+        #select-screen { animation: fadeUp 0.5s ease; }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
+        .brand {
+            text-align: center;
+            margin-bottom: 48px;
         }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: 0.4s;
-            border-radius: 34px;
+        .brand h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
         }
-
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 26px;
-            width: 26px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            transition: 0.4s;
-            border-radius: 50%;
-        }
-
-        input:checked+.slider {
-            background-color: var(--accent);
-        }
-
-        input:checked+.slider:before {
-            transform: translateX(26px);
-        }
-
-        h1,
-        h2 {
-            margin-bottom: 20px;
-            color: var(--text-primary);
-        }
-
-        .btn {
-            padding: 12px 24px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
+        .brand p {
+            color: var(--muted);
+            margin-top: 10px;
             font-size: 1rem;
-            font-weight: bold;
-            transition: background 0.3s;
-            width: 100%;
-            margin-top: 15px;
         }
 
-        .btn:hover {
-            background: var(--accent-hover);
+        .quiz-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
         }
 
-        .btn-secondary {
-            background: #95a5a6;
-        }
-
-        .btn-secondary:hover {
-            background: #7f8c8d;
-        }
-
-        .btn-danger {
-            background: var(--wrong);
-        }
-
-        .btn-danger:hover {
-            background: #c0392b;
-        }
-
-        .progress-container {
-            width: 100%;
-            background: var(--border);
-            height: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        .quiz-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.25s;
+            position: relative;
             overflow: hidden;
         }
+        .quiz-card::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            opacity: 0;
+            transition: opacity 0.25s;
+        }
+        .quiz-card:hover { 
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px var(--glow);
+        }
+        .quiz-card:hover::before { opacity: 0.04; }
 
-        #progress-bar {
-            width: 0%;
-            height: 100%;
-            background: var(--accent);
-            transition: 0.3s;
+        .quiz-card-icon {
+            font-size: 2rem;
+            margin-bottom: 14px;
+            display: block;
+        }
+        .quiz-card h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .quiz-card p {
+            color: var(--muted);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+        .quiz-card-meta {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 3px 10px;
+            border-radius: 20px;
+            background: var(--border);
+            color: var(--muted);
+            font-weight: 500;
+        }
+        .badge.accent { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+        /* ===== QUIZ SCREEN ===== */
+        #quiz-screen { animation: fadeUp 0.4s ease; }
+
+        .quiz-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .back-btn {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        .quiz-title-bar {
+            flex: 1;
+        }
+        .quiz-title-bar h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .quiz-title-bar span {
+            color: var(--muted);
+            font-size: 0.8rem;
         }
 
-        .question-meta {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-bottom: 5px;
+        .progress-wrap {
+            background: var(--border);
+            border-radius: 99px;
+            height: 6px;
+            overflow: hidden;
+            margin-bottom: 28px;
+        }
+        #progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            transition: width 0.4s cubic-bezier(.4,0,.2,1);
+            border-radius: 99px;
+        }
+
+        .q-meta {
+            color: var(--muted);
+            font-size: 0.82rem;
+            margin-bottom: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .question {
-            font-size: 1.25rem;
-            font-weight: bold;
-            margin-bottom: 20px;
-            line-height: 1.4;
+            font-family: 'Syne', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            line-height: 1.45;
         }
 
-        .options-grid {
-            display: grid;
-            gap: 10px;
-        }
+        .options-grid { display: grid; gap: 10px; }
 
         .option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            width: 100%;
-            padding: 15px;
-            border: 2px solid var(--border);
-            border-radius: 10px;
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 18px;
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            border-radius: 12px;
             cursor: pointer;
+            font-size: 0.95rem;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
+            text-align: left;
             transition: all 0.2s;
-            background: var(--bg-secondary);
-            text-align: left;
-            font-size: 1rem;
-            color: var(--text-primary);
         }
-
-        .option-letter {
-            font-weight: bold;
-            min-width: 25px;
-            color: var(--accent);
-        }
-
         .option:hover:not(:disabled) {
-            background: var(--bg-primary);
             border-color: var(--accent);
+            background: var(--surface);
         }
-
-        .correct {
-            background: var(--correct) !important;
-            border-color: var(--correct) !important;
-            color: white !important;
-            font-weight: bold;
-        }
-
-        .correct .option-letter {
-            color: white !important;
-        }
-
-        .wrong {
-            background: var(--wrong) !important;
-            border-color: var(--wrong) !important;
-            color: white !important;
-        }
-
-        .wrong .option-letter {
-            color: white !important;
-        }
-
-        #result {
-            text-align: center;
-        }
-
-        .score-text {
-            font-size: 3rem;
+        .option-letter {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
             color: var(--accent);
-            display: block;
-            margin: 20px 0;
+            min-width: 22px;
+            font-size: 0.9rem;
+        }
+        .option.correct {
+            background: rgba(34,211,160,0.1) !important;
+            border-color: var(--correct) !important;
+            color: var(--correct) !important;
+        }
+        .option.correct .option-letter { color: var(--correct) !important; }
+        .option.wrong {
+            background: rgba(255,92,122,0.1) !important;
+            border-color: var(--wrong) !important;
+            color: var(--wrong) !important;
+        }
+        .option.wrong .option-letter { color: var(--wrong) !important; }
+
+        .btn-row {
+            display: flex; gap: 10px; margin-top: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 13px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            color: #fff;
+        }
+        .btn-primary:hover { opacity: 0.88; }
+        .btn-ghost {
+            background: var(--card);
+            border: 1.5px solid var(--border);
+            color: var(--text);
+        }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ===== RESULT SCREEN ===== */
+        #result-screen { animation: fadeUp 0.4s ease; }
+
+        .result-header { text-align: center; margin-bottom: 32px; }
+        .result-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+        .score-ring {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            background: rgba(108,99,255,0.07);
+            margin: 16px 0;
+            box-shadow: 0 0 40px var(--glow);
+        }
+        .score-ring .num {
+            font-family: 'Syne', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--accent);
+            line-height: 1;
+        }
+        .score-ring .label {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 4px;
         }
 
-        .wrong-answers {
-            text-align: left;
-            margin-top: 30px;
+        .wrong-section {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
             padding: 20px;
-            background: var(--bg-secondary);
-            border-radius: 10px;
-        }
-
-        .wrong-item {
+            margin-top: 24px;
             margin-bottom: 20px;
-            padding-bottom: 20px;
+        }
+        .wrong-section h3 {
+            font-family: 'Syne', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        .wrong-item {
+            padding: 14px 0;
             border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
+        .wrong-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .wrong-item .q { font-weight: 600; margin-bottom: 6px; }
+        .ans-wrong { color: var(--wrong); }
+        .ans-correct { color: var(--correct); }
 
-        .wrong-item:last-child {
-            border-bottom: none;
-        }
+        .result-btns { display: flex; gap: 10px; }
 
-        .hidden {
-            display: none;
+        /* Utility */
+        .hidden { display: none !important; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
-
 <body>
-    <div class="theme-toggle">
-        <label class="switch">
-            <input type="checkbox" id="theme-switch">
-            <span class="slider"></span>
-        </label>
-    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
 
-    <div class="container">
-        <div id="quiz-screen">
-            <div class="progress-container">
-                <div id="progress-bar"></div>
+    <div class="wrap">
+
+        <!-- SELECTION SCREEN -->
+        <div id="select-screen">
+            <div class="brand">
+                <h1>Quiz Player</h1>
+                <p>Choose a quiz to begin</p>
             </div>
-            <div class="question-meta" id="q-count"></div>
+            <div class="quiz-grid" id="quiz-grid"></div>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="quiz-screen" class="hidden">
+            <div class="quiz-header">
+                <button class="back-btn" onclick="goHome()">← Quizzes</button>
+                <div class="quiz-title-bar">
+                    <h2 id="active-quiz-title"></h2>
+                    <span id="q-count"></span>
+                </div>
+            </div>
+            <div class="progress-wrap"><div id="progress-bar"></div></div>
+            <div class="q-meta" id="q-meta"></div>
             <div class="question" id="q-text"></div>
             <div class="options-grid" id="options-container"></div>
-            <div class="button-container" style="display: flex; gap: 10px; margin-top: 15px;">
-                <button id="prev-btn" class="btn btn-secondary" onclick="prevQuestion()"
-                    style="display: none; flex: 1;">← Previous</button>
-                <button id="next-btn" class="btn" onclick="nextQuestion()" style="flex: 1;">Next →</button>
+            <div class="btn-row">
+                <button id="prev-btn" class="btn btn-ghost hidden" onclick="prevQuestion()">← Prev</button>
+                <button id="next-btn" class="btn btn-primary hidden" onclick="nextQuestion()">Next →</button>
             </div>
         </div>
 
+        <!-- RESULT SCREEN -->
         <div id="result-screen" class="hidden">
-            <h2>Quiz Completed!</h2>
-            <span class="score-text" id="final-score">0/0</span>
-            <div id="wrong-answers-section" class="wrong-answers"></div>
-            <button class="btn" onclick="restartQuiz()">🔄 Restart Quiz</button>
+            <div class="result-header">
+                <h2 id="result-quiz-title"></h2>
+                <div class="score-ring">
+                    <span class="num" id="final-score"></span>
+                    <span class="label">correct</span>
+                </div>
+                <div id="result-msg" style="color:var(--muted);font-size:0.9rem;"></div>
+            </div>
+            <div class="wrong-section" id="wrong-section"></div>
+            <div class="result-btns">
+                <button class="btn btn-ghost" onclick="goHome()">← All Quizzes</button>
+                <button class="btn btn-primary" onclick="restartQuiz()">🔄 Restart</button>
+            </div>
         </div>
+
     </div>
 
     <script>
-        let questions = [];
-        let currentIdx = 0;
-        let score = 0;
-        let userAnswers = [];
-        let originalQuestions = [];
-        let shuffleQuestionsEnabled = true; // Set to true to enable shuffling questions
-        let shuffleAnswersEnabled = true; // Set to true to enable shuffling answers
+    // ============================================================
+    // QUIZ DATA — Add as many quizzes as you like!
+    // ============================================================
+    const ALL_QUIZZES = [
+        {
+            id: "ir",
+            icon: "🔍",
+            title: "Information Retrieval",
+            description: "Inverted indexes, TF-IDF, Boolean & Vector Space models, evaluation metrics and more.",
+            shuffleQuestions: true,
+            shuffleAnswers: true,
+            questions: [
+                {
+                    question: "Which data structure is most commonly used to support efficient full-text search in information retrieval systems?",
+                    options: ["B-tree","Hash table","Inverted index","Linked list"],
+                    answer: 2
+                },
+                {
+                    question: "Which step in query preprocessing converts words to their base or root form?",
+                    options: ["Tokenization","Normalization","Stemming","Stop-word removal"],
+                    answer: 2
+                },
+                {
+                    question: "In TF-IDF weighting, the IDF component primarily measures:",
+                    options: ["Term frequency in a document","Term importance across the collection","Document length","Query length"],
+                    answer: 1
+                },
+                {
+                    question: "Which retrieval model retrieves documents only if they exactly satisfy the query conditions?",
+                    options: ["Vector Space Model","Probabilistic Model","Boolean Model","Language Model"],
+                    answer: 2
+                },
+                {
+                    question: "Which ranking approach represents documents and queries as vectors in a multidimensional space?",
+                    options: ["Boolean ranking","Vector Space ranking","Rule-based ranking","Frequency ranking"],
+                    answer: 1
+                },
+                {
+                    question: "Stop-word removal is mainly used to:",
+                    options: ["Increase document length","Improve indexing speed and effectiveness","Increase recall only","Replace stemming"],
+                    answer: 1
+                },
+                {
+                    question: "Precision in information retrieval measures:",
+                    options: ["The fraction of relevant documents retrieved","The fraction of retrieved documents that are relevant","The fraction of irrelevant documents retrieved","The overall system correctness"],
+                    answer: 1
+                },
+                {
+                    question: "Which metric balances both precision and recall?",
+                    options: ["Accuracy","Recall","F1-score","Specificity"],
+                    answer: 2
+                },
+                {
+                    question: "Which component of an inverted index stores the list of documents containing a term?",
+                    options: ["Dictionary","Posting list","Token stream","Query log"],
+                    answer: 1
+                },
+                {
+                    question: "Which model assumes uncertainty in document relevance and uses probability estimates?",
+                    options: ["Boolean Model","Vector Space Model","Probabilistic Model","Graph-based Model"],
+                    answer: 2
+                },
+                {
+                    question: "An inverted file is inefficient for large document collections.",
+                    options: ["True","False"],
+                    answer: 1
+                },
+                {
+                    question: "Tokenization is the first step in query preprocessing.",
+                    options: ["True","False"],
+                    answer: 0
+                },
+                {
+                    question: "Stemming and lemmatization always produce identical results.",
+                    options: ["True","False"],
+                    answer: 1
+                },
+                {
+                    question: "The Boolean model supports partial document matching.",
+                    options: ["True","False"],
+                    answer: 1
+                },
+                {
+                    question: "TF-IDF assigns higher weight to rare terms in the collection.",
+                    options: ["True","False"],
+                    answer: 0
+                },
+                {
+                    question: "Precision can be high even when recall is low.",
+                    options: ["True","False"],
+                    answer: 0
+                },
+                {
+                    question: "Accuracy is always a suitable metric for evaluating retrieval systems.",
+                    options: ["True","False"],
+                    answer: 1
+                },
+                {
+                    question: "Ranking algorithms aim to order documents by estimated relevance.",
+                    options: ["True","False"],
+                    answer: 0
+                },
+                {
+                    question: "Query normalization may include case folding.",
+                    options: ["True","False"],
+                    answer: 0
+                },
+                {
+                    question: "F1-score is the harmonic mean of precision and recall.",
+                    options: ["True","False"],
+                    answer: 0
+                }
+            ]
+        },
+        // ── ADD MORE QUIZZES BELOW THIS LINE ──────────────────────
+        {
+            id: "se",
+            icon: "💻",
+            title: "Software Engineering",
+            description: "Agile & Scrum, SDLC models, requirements engineering, verification & validation, UML diagrams, and system modeling.",
+            shuffleQuestions: true,
+            shuffleAnswers: true,
+            questions: [
+                { question: "Define Agile scrum methodology.", options: ["project management that emphasizes incremental progress", "project management that emphasizes waterfall progress", "Software development life cycle", "None of the mentioned"], answer: 0 },
+                { question: "Agile Software Development is based on:", options: ["Incremental Development", "Iterative Development", "All the above", "None of the above"], answer: 2 },
+                { question: "Which model is more appropriate when the customer is expected to change requirements during the product development?", options: ["Waterfall model", "Incremental model", "Reuse-based development", "None of the mentioned"], answer: 1 },
+                { question: "Which of the following does not apply to agility to a software process?", options: ["Uses incremental product delivery strategy", "Only essential work products are produced", "Eliminate project planning and testing", "All the above"], answer: 2 },
+                { question: "User requirements are expressed as ________ in Extreme Programming.", options: ["implementation tasks", "functionalities", "scenarios", "All the above"], answer: 2 },
+                { question: "Which one of the following is a functional requirement?", options: ["Maintainability", "Portability", "Performance", "All of the above"], answer: 3 },
+                { question: "A heat sensor detects an intrusion and alerts the security company. What kind of requirement is this?", options: ["Functional", "Non-Functional", "All the above", "None of the above"], answer: 0 },
+                { question: "What is the first step of requirement elicitation?", options: ["Identifying Stakeholder", "Listing out Requirements", "Requirements Gathering", "All the above"], answer: 0 },
+                { question: "What is a Functional Requirement?", options: ["Specifies the tasks the program must complete", "Specifies the tasks the program should not complete", "Specifies the tasks the program must not work", "All of the mentioned"], answer: 0 },
+                { question: "Attributes of good software include:", options: ["Development", "Maintainability & functionality", "Functionality", "Maintainability"], answer: 1 },
+                { question: "What does SDLC stand for?", options: ["System Design Life Cycle", "Software Design Life Cycle", "Software Development Life Cycle", "System Development Life cycle"], answer: 2 },
+                { question: "Which suits the Manifesto for Agile Software Development?", options: ["Customer collaboration", "Individuals and interactions", "Working software", "All of the mentioned"], answer: 3 },
+                { question: "What are agile manifesto principles?", options: ["Customer satisfaction", "Face-to-face communication within a development team", "Changes in requirements are welcome", "All of the mentioned"], answer: 3 },
+                { question: "Which one of the following is not a step of requirement engineering?", options: ["elicitation", "design", "analysis", "documentation"], answer: 1 },
+                { question: "The user system requirements are the parts of which document?", options: ["SDD", "SRS", "DDD", "SRD"], answer: 1 },
+                { question: "What is the primary purpose of software engineering?", options: ["To write code", "To manage software projects", "To create reliable software systems", "To debug existing software"], answer: 2 },
+                { question: "What does 'refactoring' mean in software development?", options: ["Adding new features", "Improving code structure without changing its behavior", "Testing the software", "Writing documentation"], answer: 1 },
+                { question: "What is the main goal of software testing?", options: ["To ensure software meets requirements", "To reduce development time", "To increase software complexity", "To eliminate all bugs"], answer: 0 },
+                { question: "In software development, what is a 'sprint'?", options: ["A long-term project phase", "A short, time-boxed period for completing specific work", "A type of software release", "A method for bug fixing"], answer: 1 },
+                { question: "Which of the following is a key principle of Agile development?", options: ["Comprehensive documentation", "Customer collaboration over contract negotiation", "Following a strict plan", "Delivering a complete product at once"], answer: 1 },
+                { question: "What is the role of a 'scrum master' in agile development?", options: ["To write code", "To manage the product backlog", "To facilitate the scrum process and remove obstacles", "To perform user acceptance testing"], answer: 2 },
+                { question: "What is a software requirement?", options: ["A system's architecture", "A service needed by a user", "A programming language specification", "None of the above"], answer: 1 },
+                { question: "Which type of requirement specifies what the system should do?", options: ["Functional requirements", "Non-functional requirements", "Performance requirements", "System requirements"], answer: 0 },
+                { question: "Which of the following is an example of non-functional requirements?", options: ["User login functionality", "System scalability", "Payment processing", "Account management"], answer: 1 },
+                { question: "What is requirements engineering?", options: ["Building software", "Documenting user needs", "A process to identify, document, and manage requirements", "Coding and testing software"], answer: 2 },
+                { question: "The first step in requirements engineering is:", options: ["Validation", "Elicitation", "Analysis", "Specification"], answer: 1 },
+                { question: "A requirement that specifies how fast a system must respond is an example of:", options: ["Functional requirement", "Non-functional requirement", "User requirement", "None of the above"], answer: 1 },
+                { question: "Which elicitation method involves interacting directly with stakeholders?", options: ["Document analysis", "Interviews", "Observation", "Brainstorming"], answer: 1 },
+                { question: "A structured group session to gather requirements is called:", options: ["Survey", "Brainstorming", "Joint Application Development (JAD)", "Focus group"], answer: 2 },
+                { question: "What is the purpose of prototyping in requirements elicitation?", options: ["To test code", "To visualize user requirements", "To prepare the final system", "To evaluate system performance"], answer: 1 },
+                { question: "Which technique is best for understanding user tasks in their natural environment?", options: ["Observation", "Interview", "Questionnaire", "Workshop"], answer: 0 },
+                { question: "What is a 'use case'?", options: ["A testing technique", "A representation of user-system interaction", "A deployment diagram", "A project management tool"], answer: 1 },
+                { question: "In requirements elicitation, 'document analysis' involves:", options: ["Creating new documents", "Reviewing existing documentation", "Writing test cases", "Managing risk"], answer: 1 },
+                { question: "Which of these is a stakeholder in requirements gathering?", options: ["End-user", "System architect", "Customer", "All of the above"], answer: 3 },
+                { question: "Which process ensures all requirements are complete and consistent?", options: ["Validation", "Analysis", "Specification", "Design"], answer: 1 },
+                { question: "Which diagram is used to model requirements?", options: ["Sequence diagram", "Use case diagram", "State diagram", "ER diagram"], answer: 1 },
+                { question: "Requirements that contradict each other are called:", options: ["Overlapping requirements", "Inconsistent requirements", "Derived requirements", "Functional requirements"], answer: 1 },
+                { question: "What is the main purpose of the Software Requirements Specification (SRS) document?", options: ["To design the software", "To outline requirements in detail", "To test the software", "To validate software performance"], answer: 1 },
+                { question: "Which of the following is NOT a characteristic of a good requirement?", options: ["Feasibility", "Ambiguity", "Testability", "Traceability"], answer: 1 },
+                { question: "A requirement that is ambiguous:", options: ["Is precise and testable", "Is open to multiple interpretations", "Clearly defines user needs", "Has measurable acceptance criteria"], answer: 1 },
+                { question: "Which SRS quality attribute ensures requirements are implementable within the system constraints?", options: ["Completeness", "Feasibility", "Consistency", "Modifiability"], answer: 1 },
+                { question: "What is the importance of prioritizing requirements?", options: ["To reduce project cost", "To address high-impact needs first", "To eliminate unnecessary features", "To define system constraints"], answer: 1 },
+                { question: "What is the main purpose of requirements validation?", options: ["To ensure requirements meet stakeholder needs", "To verify system functionality", "To prioritize requirements", "To eliminate redundant requirements"], answer: 0 },
+                { question: "Which model is suitable for projects with unclear or changing requirements?", options: ["Waterfall model", "Plan-based model", "Agile model", "All the mentioned"], answer: 2 },
+                { question: "What is a 'user story' in Agile?", options: ["A detailed technical document", "A description of a feature from the user's perspective", "A project management chart", "A database schema"], answer: 1 },
+                { question: "Which of the following is NOT a core principle of Agile?", options: ["Customer collaboration", "Responding to change", "Following a strict plan", "Working software"], answer: 2 },
+                { question: "Continuous integration is a practice associated with which process?", options: ["Waterfall", "Agile", "Spiral", "Prototype"], answer: 1 },
+                { question: "Which process is focused on early feedback by creating working versions of the software?", options: ["Waterfall", "Spiral", "Prototype", "V-model"], answer: 2 },
+                { question: "Which model is suitable for safety-critical systems?", options: ["Agile", "Waterfall", "Prototype", "Big bang"], answer: 1 },
+                { question: "What is 'refactoring' in software development?", options: ["Adding new features", "Redesigning the database", "Improving the internal structure of code without changing its external behavior", "Writing user documentation"], answer: 2 },
+                { question: "What is the primary goal of software integration?", options: ["To isolate individual components.", "To combine software components into a unified system.", "To document user requirements.", "To design user interfaces."], answer: 1 },
+                { question: "Which type of testing focuses on verifying the interaction between software modules?", options: ["Unit testing.", "Integration testing.", "System testing.", "Acceptance testing."], answer: 1 },
+                { question: "What is the primary goal of reuse-oriented software engineering?", options: ["To develop software from scratch for each project.", "To minimize development time and cost by reusing existing components.", "To focus on creating highly customized software.", "To prioritize documentation over code."], answer: 1 },
+                { question: "What is the primary goal of requirements engineering?", options: ["Writing code efficiently.", "Designing user interfaces.", "Understanding and documenting user needs.", "Testing software thoroughly."], answer: 2 },
+                { question: "Which phase of requirements engineering involves gathering information from stakeholders?", options: ["Requirements validation.", "Requirements elicitation.", "Requirements specification.", "Requirements management."], answer: 1 },
+                { question: "What is a 'stakeholder' in requirements engineering?", options: ["A software developer.", "Anyone affected by the system.", "A database administrator.", "A network engineer."], answer: 1 },
+                { question: "What does 'functional requirements' describe?", options: ["User interface design.", "System performance.", "What the system should do.", "Security constraints."], answer: 2 },
+                { question: "What does 'non-functional requirements' describe?", options: ["Specific features of the system.", "How well the system performs.", "Database schemas.", "User manuals."], answer: 1 },
+                { question: "Which technique is used to document requirements in a structured way?", options: ["Brainstorming", "Prototyping", "Use cases", "Interviews"], answer: 2 },
+                { question: "What is a 'use case diagram'?", options: ["A diagram showing database relationships.", "A diagram illustrating user interactions with the system.", "A diagram showing code dependencies.", "A diagram showing network topology."], answer: 1 },
+                { question: "What is the benefit of 'prioritizing requirements'?", options: ["Increased project complexity.", "Focus on delivering the most critical features first.", "Reduced user satisfaction.", "Increased development costs."], answer: 1 },
+                { question: "Which of the following activities is included in the Requirements engineering process?", options: ["Requirements elicitation and analysis", "Requirements specification", "Requirements validation", "All the mentioned"], answer: 3 },
+                { question: "What is the primary purpose of software validation?", options: ["To verify that the software is built correctly.", "To ensure the software meets user requirements.", "To optimize code performance.", "To document the development process."], answer: 1 },
+                { question: "Verification is concerned with:", options: ["User satisfaction", "Building the right product", "Building the product right", "Design phase"], answer: 2 },
+                { question: "Validation is concerned with:", options: ["User satisfaction", "Building the right product", "Building the product right", "Design phase"], answer: 1 },
+                { question: "Which of the following is an example of validation?", options: ["Inspection", "Walkthrough", "User acceptance testing", "Static analysis"], answer: 2 },
+                { question: "Which process ensures compliance with specifications?", options: ["Validation", "Verification", "Maintenance", "Deployment"], answer: 1 },
+                { question: "Which question does verification answer?", options: ["Is the product useful?", "Are we building the right product?", "Are we building the product right?", "Is the product profitable?"], answer: 2 },
+                { question: "Which question does validation answer?", options: ["Is the design correct?", "Are we building the right product?", "Are we building the product right?", "Is coding correct?"], answer: 1 },
+                { question: "Which of the following is a validation activity?", options: ["Unit testing.", "Integration testing.", "Acceptance testing.", "Code review."], answer: 2 },
+                { question: "What is the role of the customer or end-user in validation?", options: ["Designing the software architecture.", "Reviewing and approving the software.", "Writing code.", "Managing the development team."], answer: 1 },
+                { question: "Which testing technique is used to determine if the software satisfies the specified requirements?", options: ["Unit testing.", "Integration testing.", "System testing.", "Acceptance testing."], answer: 3 },
+                { question: "What is the difference between verification and validation?", options: ["Verification checks if the software is correct, validation checks if it meets user needs.", "Verification checks if the software meets user needs, validation checks if it is correct.", "Verification and validation are the same thing.", "Verification focuses on performance, validation focuses on security."], answer: 0 },
+                { question: "In the V-model, which phase corresponds to unit testing?", options: ["Requirements analysis.", "Architectural design.", "Detailed design.", "Coding."], answer: 2 },
+                { question: "Which phase corresponds to acceptance testing in the V-model?", options: ["Requirements analysis.", "Architectural design.", "System design.", "Coding."], answer: 0 },
+                { question: "What does the 'V' in V-model represent?", options: ["Validation and verification.", "Visual representation of data.", "Velocity and volume.", "Variability and versions."], answer: 0 },
+                { question: "In V-model, which testing level is performed after integration testing?", options: ["Unit testing.", "Acceptance testing.", "System testing.", "Alpha testing."], answer: 2 },
+                { question: "What is the primary disadvantage of the V-model?", options: ["Lack of documentation.", "Difficulty in handling changing requirements.", "Poor testing coverage.", "Inefficient resource allocation."], answer: 1 },
+                { question: "Which phase corresponds to system testing in the V-model?", options: ["Requirements analysis.", "Architectural design.", "System design.", "Coding."], answer: 2 },
+                { question: "What is the focus of unit testing?", options: ["Testing the entire system.", "Testing individual components.", "Testing user interfaces.", "Testing database performance."], answer: 1 },
+                { question: "Which phase ensures that the software meets the user's business requirements?", options: ["Unit testing.", "Integration testing.", "System testing.", "Acceptance testing."], answer: 3 },
+                { question: "Which level of testing checks the interaction between modules?", options: ["Unit testing.", "Integration testing.", "System testing.", "Acceptance testing."], answer: 1 },
+                { question: "Which of the following is correct for Agile development?", options: ["Program specification, design and implementation are inter-leaved", "The system is developed as a series of versions or increments with stakeholders involved in version specification and evaluation", "Frequent delivery of new versions for evaluation", "All the mentioned"], answer: 3 },
+                { question: "Which of the following is the correct Key practices for agile development?", options: ["User stories for specification", "Test-first development and Refactoring", "Pair programming", "All the mentioned"], answer: 3 },
+                { question: "The Spiral Model primarily focuses on:", options: ["Coding speed", "Documentation", "Risk analysis", "Testing only"], answer: 2 },
+                { question: "Each loop in the Spiral Model represents:", options: ["A test case", "A development phase", "A complete project", "A maintenance cycle"], answer: 1 },
+                { question: "Spiral Model is best suited for:", options: ["Small projects", "Low-risk projects", "Large, complex, high-risk projects", "Simple applications"], answer: 2 },
+                { question: "In the Spiral Model, risk is evaluated during:", options: ["Planning phase", "Coding phase", "Risk analysis phase", "Testing phase"], answer: 2 },
+                { question: "The Spiral Model is also known as:", options: ["Linear model", "Evolutionary process model", "Static model", "Sequential model"], answer: 1 },
+                { question: "The first step in each spiral loop is:", options: ["Testing", "Planning", "Coding", "Deployment"], answer: 1 },
+                { question: "Which activity follows risk analysis in the Spiral Model?", options: ["Planning", "Engineering (development & testing)", "Maintenance", "Documentation"], answer: 1 },
+                { question: "What does each spiral end with?", options: ["Coding", "Documentation", "Customer evaluation", "Testing"], answer: 2 },
+                { question: "The Spiral Model can be considered a combination of:", options: ["Iterative and Waterfall approaches", "Agile only", "Testing and deployment", "Coding and debugging"], answer: 0 },
+                { question: "Which of the following is a key strength of the Spiral Model?", options: ["Simple to manage", "No need for experts", "Early identification of risks", "Low cost"], answer: 2 },
+                { question: "Which phase involves customer feedback and approval?", options: ["Planning", "Risk Analysis", "Engineering", "Evaluation"], answer: 3 },
+                { question: "________ is the process of developing abstract models of a system, with each model presenting a different view or perspective of that system.", options: ["System modeling", "Waterfall", "Agile", "Unit testing"], answer: 0 },
+                { question: "Which model type shows how a system interacts with its external environment?", options: ["Structural model", "Behavioral model", "Context model", "Interaction model"], answer: 2 },
+                { question: "Interaction models include which of the following diagram types?", options: ["Use case and sequence diagrams", "Class and state diagrams", "Activity and class diagrams", "Component and deployment diagrams"], answer: 0 },
+                { question: "What do structural models (e.g. class diagrams) represent?", options: ["Dynamic behavior of the system", "External system context", "Internal organization—classes and relationships", "User interface layouts"], answer: 2 },
+                { question: "Which perspective focuses on the dynamic behavior of a system (e.g., activity, state transitions)?", options: ["Context perspective", "Interaction perspective", "Structural perspective", "Behavioral perspective"], answer: 3 },
+                { question: "Which of these is a type of UML diagram?", options: ["Class diagram", "Activity diagram", "Sequence diagram", "All the mentioned"], answer: 3 },
+                { question: "Structural models of software display the organization of a system in terms of the components that make up that system and their relationships.", options: ["Structural models", "Behavioral models", "Interaction models", "All of the mentioned"], answer: 0 },
+                { question: "Which model type helps to identify user requirements?", options: ["Structural models", "Behavioral models", "Interaction models", "All of the mentioned"], answer: 2 },
+                { question: "Which of the following represents the structural models of the system?", options: ["Class diagram", "Activity diagram", "Sequence diagram", "Use-case diagram"], answer: 0 },
+                { question: "Which of the following UML diagrams represents the interaction models of the system?", options: ["Class diagram", "Activity diagram", "Sequence diagram", "State diagram"], answer: 2 },
+                { question: "A sequence diagram models:", options: ["The interaction between objects over time", "System's physical deployment", "Workflow of a business process", "Hierarchical relationships"], answer: 0 },
+                { question: "Which UML diagram is best suited for modeling how the system reacts to internal and external events?", options: ["Sequence diagram", "State machine diagram", "Class diagram", "Activity diagram"], answer: 1 },
+                { question: "What is represented by a rectangle in a class diagram?", options: ["Use case", "Class", "Object interaction", "Deployment node"], answer: 1 },
+                { question: "What do lifelines in a sequence diagram represent?", options: ["System requirements", "Object interactions over time", "User stories", "Hardware components"], answer: 1 },
+                { question: "In a class diagram, a solid line with a hollow arrowhead represents:", options: ["Association", "Generalization", "Dependency", "Aggregation"], answer: 1 },
+                { question: "A use case diagram consists of:", options: ["Actors, use cases, and relationships", "Classes and their relationships", "Components and nodes", "States and transitions"], answer: 0 },
+                { question: "Which diagram represents the hierarchical relationships in a system?", options: ["Use case diagram", "Class diagram", "Component diagram", "Deployment diagram"], answer: 1 },
+                { question: "Which of the following is NOT a system modeling technique?", options: ["Object-oriented modeling", "Agile methodology", "Data flow modeling", "State modeling"], answer: 1 },
+                { question: "________ shows the object classes in the system and the associations between these classes.", options: ["Sequence diagram", "Use case diagram", "Activity diagram", "Class diagram"], answer: 3 },
+                { question: "________ shows the activities involved in a process or in data processing.", options: ["Sequence diagram", "Use case diagram", "Activity diagram", "Class diagram"], answer: 2 },
+                { question: "________ reveals how the system being developed is used in broader business processes.", options: ["Process model", "State model", "Interaction model", "All the mentioned"], answer: 0 },
+                { question: "________ shows the dynamic behavior of the system and how it responds to events.", options: ["Structural models", "Behavioral models", "Interaction models", "All of the mentioned"], answer: 1 },
+                { question: "________ presents the system and its relationship with other systems.", options: ["Class diagram", "Activity diagram", "Sequence diagram", "Context diagram"], answer: 3 },
+                { question: "Which of the following is a static model?", options: ["Structural models", "Behavioral models", "All the mentioned", "Both of the mentioned"], answer: 0 },
+                { question: "The state machine model focuses on:", options: ["Data flow between components", "Sequence of interactions between users and system", "System states and transitions triggered by events", "Object hierarchies"], answer: 2 },
+                { question: "Which diagram is useful for modeling functional requirements from a user's perspective?", options: ["Class diagram", "Use case diagram", "Activity diagram", "Sequence diagram"], answer: 1 },
+                { question: "The vertical lifeline in a UML sequence diagram represents:", options: ["Time progression for an object or actor", "Message priority", "The total processing time of the system", "Component architecture layers"], answer: 0 },
+                { question: "Which diagram is best for modeling the logic of business processes?", options: ["Sequence diagram", "Activity diagram", "State machine diagram", "Class diagram"], answer: 1 },
+                { question: "Which diagram focuses on system boundary and interactions with the environment, without internal detail?", options: ["Context model", "Sequence diagram", "Class diagram", "Activity diagram"], answer: 0 },
+                { question: "What is the primary output of the architectural design process?", options: ["Detailed code documentation", "A set of test cases", "An architectural model describing components and their communication", "A deployment script"], answer: 2 }
+            ]
+        },
+        {
+            id: "cybersec",
+            icon: "🔐",
+            title: "Cybersecurity Risk Management",
+            description: "Cyber threats, risk assessment methods, mitigation strategies, control types, and business impact analysis.",
+            shuffleQuestions: true,
+            shuffleAnswers: true,
+            questions: [
+                { question: "A financial institution discovers several internal systems run outdated operating systems. Analysts determine ransomware attacks targeting such systems could stop online banking services. What should the organization do first in the risk management process?", options: ["Install new firewalls", "Conduct employee awareness training", "Prioritize the risk using likelihood and impact", "Replace all systems immediately"], answer: 2 },
+                { question: "A healthcare provider detects attackers exploiting unknown vulnerabilities before vendors release security patches. What type of vulnerability is being exploited?", options: ["Zero-day vulnerability", "Weak password vulnerability", "Insider vulnerability", "Configuration vulnerability"], answer: 0 },
+                { question: "A bank calculates expected financial losses from cyberattacks using probability data and historical breach statistics. Which risk assessment method is used?", options: ["Qualitative analysis", "Quantitative risk assessment", "Monitoring analysis", "Administrative evaluation"], answer: 1 },
+                { question: "Employees frequently click malicious email links causing malware infections. The organization wants a long-term preventive solution. Which action best addresses the root cause?", options: ["Install stronger firewalls", "Replace the email server", "Increase network bandwidth", "Conduct employee awareness training"], answer: 3 },
+                { question: "A company analyzes a cyber risk with low probability but extremely high potential financial damage. How should this risk likely be treated?", options: ["Treat it as critical due to impact", "Ignore it because likelihood is low", "Accept the risk", "Delay mitigation"], answer: 0 },
+                { question: "Attackers infiltrate a network and secretly collect data over several months without detection. Which threat best describes this situation?", options: ["Password attack", "Advanced Persistent Threat", "DDoS attack", "Insider sabotage"], answer: 1 },
+                { question: "Security experts hold workshops and categorize cyber risks as High, Medium, or Low. Which method of risk assessment is used?", options: ["Quantitative evaluation", "Numerical modeling", "Qualitative risk assessment", "Statistical forecasting"], answer: 2 },
+                { question: "A company installs encryption and firewalls to protect customer databases. What is the main objective of these measures?", options: ["Improve system performance", "Reduce cybersecurity risk exposure", "Increase network availability", "Simplify authentication"], answer: 1 },
+                { question: "An organization launches monthly simulated phishing attacks to evaluate employee awareness. Which best practice is being applied?", options: ["Incident response planning", "Threat elimination", "Employee awareness program", "Security monitoring"], answer: 2 },
+                { question: "A cyberattack exposes financial data and customers stop trusting the company. Which business impact occurred?", options: ["Operational disruption", "Infrastructure damage", "Reputation damage", "Hardware failure"], answer: 2 },
+                { question: "Due to limited cybersecurity funding, a company focuses only on mitigating the most severe risks. Which strategy is being used?", options: ["Risk-based approach", "Compliance strategy", "Reactive approach", "Infrastructure strategy"], answer: 0 },
+                { question: "A server room is protected by biometric locks and surveillance cameras. Which control type is implemented?", options: ["Technical control", "Administrative control", "Physical control", "Logical control"], answer: 2 },
+                { question: "Hackers use artificial intelligence tools to generate thousands of targeted phishing emails. Which threat category does this represent?", options: ["Insider threat", "AI-powered cyber attack", "Social engineering", "Zero-day exploitation"], answer: 1 },
+                { question: "A security analyst estimates how severely ransomware could disrupt business operations. Which aspect of risk evaluation is being analyzed?", options: ["Impact", "Likelihood", "Vulnerability", "Detection ability"], answer: 0 },
+                { question: "A bank implements multi-factor authentication (MFA) for all internal systems. Which risk is primarily reduced?", options: ["Unauthorized access", "Hardware malfunction", "Data corruption", "Physical theft"], answer: 0 },
+                { question: "A cybersecurity team lists threats like phishing attacks and identifies employee training gaps as vulnerabilities. Which step of the risk management process is this?", options: ["Risk mitigation", "Risk identification", "Risk monitoring", "Risk elimination"], answer: 1 },
+                { question: "A company constantly reviews logs and network activity to detect suspicious events. Which step of the risk management process does this represent?", options: ["Risk mitigation", "Continuous monitoring", "Risk assessment", "Incident recovery"], answer: 1 },
+                { question: "A cyberattack occurs because the organization delayed installing software updates. Which mitigation practice could have prevented this?", options: ["Firewall monitoring", "Employee awareness training", "Patch management", "Network redesign"], answer: 2 },
+                { question: "A company evaluates cyber risks by analyzing both probability of occurrence and potential business impact. Which concept is being applied?", options: ["Threat classification", "Risk evaluation", "Incident monitoring", "Security auditing"], answer: 1 },
+                { question: "An organization installs antivirus software and enforces strong password policies. Which stage of risk management does this represent?", options: ["Risk mitigation", "Risk identification", "Risk analysis", "Risk monitoring"], answer: 0 },
+                { question: "A company struggles to secure its systems because it uses legacy infrastructure and modern cloud services. Which cybersecurity challenge is this?", options: ["Budget limitations", "Complex IT environments", "Insider threats", "Human error"], answer: 1 },
+                { question: "A cyberattack causes government fines and negative media coverage. Which impact is demonstrated?", options: ["Infrastructure damage", "Operational disruption", "Legal and reputational damage", "Hardware failure"], answer: 2 },
+                { question: "A company prepares procedures to detect, contain, and recover from cyber incidents. Which practice is this?", options: ["Incident response planning", "Risk identification", "Threat monitoring", "Infrastructure recovery"], answer: 0 },
+                { question: "An online banking platform becomes unavailable for several hours due to an attack. Which business impact occurred?", options: ["Reputation damage", "Financial loss", "Operational disruption", "System corruption"], answer: 2 },
+                { question: "An employee sends confidential information to an attacker posing as a trusted partner. Which factor enabled the breach?", options: ["Hardware failure", "Human error", "Network congestion", "Software malfunction"], answer: 1 },
+                { question: "A bank evaluates the likelihood and potential damage of phishing attacks. Which stage of risk management is this?", options: ["Risk identification", "Risk mitigation", "Risk monitoring", "Risk analysis"], answer: 3 },
+                { question: "Employees attend cybersecurity awareness sessions about phishing attacks. Which control type is this?", options: ["Administrative control", "Technical control", "Physical control", "Environmental control"], answer: 0 },
+                { question: "A cyberattack leaks customer data and leads to regulatory fines. Which impact category does this represent?", options: ["Infrastructure failure", "Legal penalties", "Operational disruption", "Technical error"], answer: 1 },
+                { question: "A cybersecurity team calculates numerical risk values using probability and cost data. Which risk assessment method is used?", options: ["Qualitative", "Predictive", "Quantitative", "Descriptive"], answer: 2 },
+                { question: "A company ranks cyber threats by severity before deciding mitigation actions. Which step of the risk management process is this?", options: ["Risk identification", "Risk monitoring", "Risk mitigation", "Risk assessment"], answer: 3 },
+                { question: "An organization installs intrusion detection systems to detect attacks in real time. Which principle does this support?", options: ["Continuous monitoring", "Threat elimination", "Compliance enforcement", "Access restriction"], answer: 0 },
+                { question: "Customers lose confidence in a company after a major data breach. Which impact occurred?", options: ["Operational disruption", "Reputation damage", "Infrastructure collapse", "Hardware malfunction"], answer: 1 },
+                { question: "A cyber risk has moderate likelihood but catastrophic potential damage. How should it likely be prioritized?", options: ["Low priority", "Acceptable risk", "Critical priority", "Medium priority"], answer: 2 },
+                { question: "Access cards and locked doors are installed to protect the company data center. Which type of control is this?", options: ["Administrative", "Technical", "Logical", "Physical"], answer: 3 },
+                { question: "Attackers flood a website with massive traffic causing service outages. Which impact occurs first?", options: ["Operational disruption", "Data breach", "Insider compromise", "Hardware damage"], answer: 0 },
+                { question: "A company regularly audits cybersecurity policies. Which best practice is this?", options: ["Continuous monitoring and auditing", "Risk elimination", "Infrastructure redesign", "Incident avoidance"], answer: 0 },
+                { question: "Antivirus software is installed on all company devices. Which control category does this belong to?", options: ["Administrative control", "Technical control", "Physical control", "Operational control"], answer: 1 },
+                { question: "A ransomware attack encrypts company files and halts operations. Which threat caused the incident?", options: ["Password attack", "Phishing attack", "Ransomware attack", "DDoS attack"], answer: 2 },
+                { question: "A security team wants to detect threats before they cause damage. Which practice supports this goal?", options: ["Infrastructure expansion", "Risk acceptance", "Delayed patching", "Continuous monitoring"], answer: 3 },
+                { question: "A company enforces strong password policies. Which vulnerability is addressed?", options: ["Weak passwords", "Insider threats", "AI attacks", "Network congestion"], answer: 0 },
+                { question: "A company performs vulnerability scans monthly. Which stage of risk management does this support?", options: ["Continuous monitoring", "Risk mitigation", "Risk elimination", "Risk avoidance"], answer: 0 },
+                { question: "A cyber risk could expose financial records and harm company reputation. Which element of risk is being evaluated?", options: ["Threat origin", "Impact severity", "Network design", "Attack frequency"], answer: 1 },
+                { question: "Analysts determine phishing attacks are very likely to occur. Which risk component is being evaluated?", options: ["Likelihood", "Impact", "Recovery", "Mitigation"], answer: 0 },
+                { question: "Customer communications are encrypted to protect sensitive data. Which objective is achieved?", options: ["Improve performance", "Reduce costs", "Prevent unauthorized access", "Increase bandwidth"], answer: 2 },
+                { question: "Security resources are allocated to address the most dangerous cyber risks first. Which principle is applied?", options: ["Risk-based approach", "Compliance strategy", "Reactive defense", "Infrastructure planning"], answer: 0 },
+                { question: "A company sends simulated phishing emails to test employee awareness. Which strategy is this?", options: ["Awareness simulation training", "Network security testing", "Firewall testing", "Incident recovery testing"], answer: 0 },
+                { question: "A cyberattack causes both financial losses and service downtime. Which impact occurred?", options: ["Financial and operational damage", "Infrastructure collapse", "Reputation improvement", "Hardware malfunction"], answer: 0 },
+                { question: "A cybersecurity team identifies vulnerabilities before attackers exploit them. Which step of risk management is this?", options: ["Risk monitoring", "Risk mitigation", "Risk identification", "Incident response"], answer: 2 },
+                { question: "A company installs security patches immediately after release. Which objective is achieved?", options: ["Improve system speed", "Prevent vulnerability exploitation", "Increase storage capacity", "Reduce network traffic"], answer: 1 },
+                { question: "An organization integrates cybersecurity risk management into strategic decisions. Which principle is demonstrated?", options: ["Reactive defense", "Static planning", "Risk avoidance", "Continuous improvement"], answer: 3 }
+            ]
+        },
+    ];
+    // ============================================================
 
-        // Hard-coded questions - add your questions here
-        const hardcodedQuestions = [
-            {
-                "question": "Which data structure is most commonly used to support efficient full-text search in information retrieval systems?",
-                "options": [
-                    "B-tree",
-                    "Hash table",
-                    "Inverted index",
-                    "Linked list"
-                ],
-                "answer": 2
-            },
-            {
-                "question": "Which step in query preprocessing converts words to their base or root form?",
-                "options": [
-                    "Tokenization",
-                    "Normalization",
-                    "Stemming",
-                    "Stop-word removal"
-                ],
-                "answer": 2
-            },
-            {
-                "question": "In TF-IDF weighting, the IDF component primarily measures:",
-                "options": [
-                    "Term frequency in a document",
-                    "Term importance across the collection",
-                    "Document length",
-                    "Query length"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Which retrieval model retrieves documents only if they exactly satisfy the query conditions?",
-                "options": [
-                    "Vector Space Model",
-                    "Probabilistic Model",
-                    "Boolean Model",
-                    "Language Model"
-                ],
-                "answer": 2
-            },
-            {
-                "question": "Which ranking approach represents documents and queries as vectors in a multidimensional space?",
-                "options": [
-                    "Boolean ranking",
-                    "Vector Space ranking",
-                    "Rule-based ranking",
-                    "Frequency ranking"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Stop-word removal is mainly used to:",
-                "options": [
-                    "Increase document length",
-                    "Improve indexing speed and effectiveness",
-                    "Increase recall only",
-                    "Replace stemming"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Precision in information retrieval measures:",
-                "options": [
-                    "The fraction of relevant documents retrieved",
-                    "The fraction of retrieved documents that are relevant",
-                    "The fraction of irrelevant documents retrieved",
-                    "The overall system correctness"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Which metric balances both precision and recall?",
-                "options": [
-                    "Accuracy",
-                    "Recall",
-                    "F1-score",
-                    "Specificity"
-                ],
-                "answer": 2
-            },
-            {
-                "question": "Which component of an inverted index stores the list of documents containing a term?",
-                "options": [
-                    "Dictionary",
-                    "Posting list",
-                    "Token stream",
-                    "Query log"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Which model assumes uncertainty in document relevance and uses probability estimates?",
-                "options": [
-                    "Boolean Model",
-                    "Vector Space Model",
-                    "Probabilistic Model",
-                    "Graph-based Model"
-                ],
-                "answer": 2
-            },
-            {
-                "question": "An inverted file is inefficient for large document collections.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Tokenization is the first step in query preprocessing.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "Stemming and lemmatization always produce identical results.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "The Boolean model supports partial document matching.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "TF-IDF assigns higher weight to rare terms in the collection.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "Precision can be high even when recall is low.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "Accuracy is always a suitable metric for evaluating retrieval systems.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 1
-            },
-            {
-                "question": "Ranking algorithms aim to order documents by estimated relevance.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "Query normalization may include case folding.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            },
-            {
-                "question": "F1-score is the harmonic mean of precision and recall.",
-                "options": [
-                    "True",
-                    "False"
-                ],
-                "answer": 0
-            }
-        ];
+    let activeQuiz = null;
+    let questions = [];
+    let originalQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let userAnswers = [];
 
-        // Theme toggle
-        const themeSwitch = document.getElementById('theme-switch');
-        themeSwitch.addEventListener('change', function () {
-            document.body.classList.toggle('light-mode');
+    // ---- Theme ----
+    function toggleTheme() {
+        document.body.classList.toggle('light');
+        document.querySelector('.theme-toggle').textContent =
+            document.body.classList.contains('light') ? '🌙' : '☀️';
+    }
+
+    // ---- Build selection screen ----
+    function buildSelectScreen() {
+        const grid = document.getElementById('quiz-grid');
+        grid.innerHTML = '';
+        ALL_QUIZZES.forEach(quiz => {
+            const card = document.createElement('div');
+            card.className = 'quiz-card';
+            card.innerHTML = `
+                <span class="quiz-card-icon">${quiz.icon}</span>
+                <h3>${quiz.title}</h3>
+                <p>${quiz.description}</p>
+                <div class="quiz-card-meta">
+                    <span class="badge accent">${quiz.questions.length} questions</span>
+                    ${quiz.shuffleQuestions ? '<span class="badge">Shuffled</span>' : ''}
+                </div>
+            `;
+            card.onclick = () => startQuiz(quiz);
+            grid.appendChild(card);
+        });
+    }
+
+    // ---- Navigation ----
+    function show(id) {
+        ['select-screen','quiz-screen','result-screen'].forEach(s => {
+            document.getElementById(s).classList.toggle('hidden', s !== id);
+        });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function goHome() {
+        activeQuiz = null;
+        show('select-screen');
+    }
+
+    // ---- Start quiz ----
+    function startQuiz(quiz) {
+        activeQuiz = quiz;
+        currentIdx = 0;
+        score = 0;
+        userAnswers = [];
+
+        originalQuestions = JSON.parse(JSON.stringify(quiz.questions));
+        questions = prepare(JSON.parse(JSON.stringify(quiz.questions)), quiz);
+
+        document.getElementById('active-quiz-title').textContent = quiz.title;
+        show('quiz-screen');
+        loadQuestion();
+    }
+
+    function prepare(qs, quiz) {
+        if (quiz.shuffleQuestions) qs.sort(() => Math.random() - 0.5);
+        if (quiz.shuffleAnswers) {
+            qs.forEach(q => {
+                const correct = q.options[q.answer];
+                const idx = q.options.map((_,i)=>i);
+                for (let i = idx.length-1; i > 0; i--) {
+                    const j = Math.floor(Math.random()*(i+1));
+                    [idx[i],idx[j]] = [idx[j],idx[i]];
+                }
+                q.options = idx.map(i => q.options[i]);
+                q.answer = q.options.indexOf(correct);
+            });
+        }
+        return qs;
+    }
+
+    // ---- Load question ----
+    function loadQuestion() {
+        if (currentIdx >= questions.length) { showResult(); return; }
+
+        const q = questions[currentIdx];
+        const total = questions.length;
+        const pct = (currentIdx / total) * 100;
+
+        document.getElementById('q-meta').textContent = `Question ${currentIdx+1} of ${total}`;
+        document.getElementById('q-count').textContent = `${currentIdx+1} / ${total}`;
+        document.getElementById('progress-bar').style.width = pct + '%';
+        document.getElementById('q-text').textContent = q.question;
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+        const letters = ['A','B','C','D','E','F'];
+
+        q.options.forEach((opt, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerHTML = `<span class="option-letter">${letters[i]}.</span><span>${opt}</span>`;
+            btn.onclick = () => checkAnswer(i, btn);
+            container.appendChild(btn);
         });
 
-        // Add reload warning
-        window.onbeforeunload = function () {
-            return "Reloading the page will reset everything. Are you sure?";
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        prevBtn.classList.toggle('hidden', currentIdx === 0);
+        nextBtn.classList.add('hidden');
+        nextBtn.textContent = currentIdx === total-1 ? 'Submit ✓' : 'Next →';
+
+        // Restore answer if already answered
+        const ua = userAnswers[currentIdx];
+        if (ua) {
+            const allBtns = container.querySelectorAll('.option');
+            allBtns.forEach(b => b.disabled = true);
+            const selIdx = questions[currentIdx].options.indexOf(ua.selected);
+            allBtns[questions[currentIdx].answer].classList.add('correct');
+            if (!ua.isCorrect && selIdx >= 0) allBtns[selIdx].classList.add('wrong');
+            nextBtn.classList.remove('hidden');
+        }
+    }
+
+    function checkAnswer(selected, btn) {
+        const q = questions[currentIdx];
+        const allBtns = document.querySelectorAll('.option');
+        allBtns.forEach(b => b.disabled = true);
+
+        const isCorrect = selected === q.answer;
+        userAnswers[currentIdx] = {
+            question: q.question,
+            selected: q.options[selected],
+            correct: q.options[q.answer],
+            isCorrect
         };
 
-        function startQuiz() {
-            currentIdx = 0;
-            score = 0;
-            userAnswers = [];
+        if (isCorrect) { btn.classList.add('correct'); score++; }
+        else { btn.classList.add('wrong'); allBtns[q.answer].classList.add('correct'); }
 
-            questions = JSON.parse(JSON.stringify(hardcodedQuestions));
-            originalQuestions = JSON.parse(JSON.stringify(hardcodedQuestions));
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
 
-            // Apply shuffling
-            if (shuffleQuestionsEnabled) {
-                questions.sort(() => Math.random() - 0.5);
-            }
+    function nextQuestion() { currentIdx++; loadQuestion(); window.scrollTo(0,0); }
+    function prevQuestion() { if (currentIdx > 0) { currentIdx--; loadQuestion(); window.scrollTo(0,0); } }
 
-            if (shuffleAnswersEnabled) {
-                questions.forEach(q => {
-                    const correctAnswer = q.options[q.answer];
-                    // Create array of indices and shuffle them
-                    const indices = q.options.map((_, i) => i);
-                    for (let i = indices.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [indices[i], indices[j]] = [indices[j], indices[i]];
-                    }
-                    // Reorder options based on shuffled indices
-                    const newOptions = indices.map(i => q.options[i]);
-                    q.options = newOptions;
-                    // Update answer index
-                    q.answer = q.options.indexOf(correctAnswer);
-                });
-            }
+    // ---- Restart ----
+    function restartQuiz() {
+        currentIdx = 0; score = 0; userAnswers = [];
+        questions = prepare(JSON.parse(JSON.stringify(originalQuestions)), activeQuiz);
+        document.getElementById('progress-bar').style.width = '0%';
+        show('quiz-screen');
+        loadQuestion();
+    }
 
-            document.getElementById('quiz-screen').classList.remove('hidden');
-            document.getElementById('result-screen').classList.add('hidden');
+    // ---- Results ----
+    function showResult() {
+        document.getElementById('result-quiz-title').textContent = activeQuiz.title + ' — Results';
+        document.getElementById('final-score').textContent = `${score}/${questions.length}`;
+        const pct = Math.round((score/questions.length)*100);
+        document.getElementById('result-msg').textContent =
+            pct === 100 ? '🎉 Perfect score!' :
+            pct >= 80 ? '🔥 Great job!' :
+            pct >= 60 ? '👍 Good effort!' :
+            '📖 Keep studying!';
 
-            loadQuestion();
-        }
-
-        function loadQuestion() {
-            if (currentIdx >= questions.length) {
-                showResult();
-                return;
-            }
-
-            const q = questions[currentIdx];
-            document.getElementById('q-count').innerText = `Question ${currentIdx + 1} of ${questions.length}`;
-            document.getElementById('progress-bar').style.width = `${((currentIdx) / questions.length) * 100}%`;
-            document.getElementById('q-text').innerText = q.question;
-
-            const container = document.getElementById('options-container');
-            container.innerHTML = '';
-
-            const nextBtn = document.getElementById('next-btn');
-            nextBtn.style.display = 'none';
-            nextBtn.innerText = currentIdx === questions.length - 1 ? 'Submit' : 'Next →';
-
-            document.getElementById('prev-btn').style.display = currentIdx > 0 ? 'block' : 'none';
-
-            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
-
-            q.options.forEach((opt, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'option';
-
-                const letter = document.createElement('span');
-                letter.className = 'option-letter';
-                letter.innerText = letters[i] + '.';
-
-                const text = document.createElement('span');
-                text.innerText = opt;
-
-                btn.appendChild(letter);
-                btn.appendChild(text);
-                btn.onclick = () => checkAnswer(i, btn);
-                container.appendChild(btn);
+        const ws = document.getElementById('wrong-section');
+        const wrongs = userAnswers.filter(a => !a.isCorrect);
+        if (wrongs.length === 0) {
+            ws.innerHTML = '<h3>Review</h3><p style="color:var(--correct);margin-top:8px;">✓ All answers correct!</p>';
+        } else {
+            let html = '<h3>Review Wrong Answers</h3>';
+            wrongs.forEach((wa, i) => {
+                html += `<div class="wrong-item">
+                    <div class="q">${i+1}. ${wa.question}</div>
+                    <div class="ans-wrong">✗ Your answer: ${wa.selected}</div>
+                    <div class="ans-correct">✓ Correct: ${wa.correct}</div>
+                </div>`;
             });
-
-            if (userAnswers[currentIdx]) {
-                const ua = userAnswers[currentIdx];
-                const selectedIdx = questions[currentIdx].options.indexOf(ua.selected);
-                const correctIdx = questions[currentIdx].answer;
-                const allBtns = document.querySelectorAll('.option');
-                allBtns.forEach(b => b.disabled = true);
-                allBtns[correctIdx].classList.add('correct');
-                if (!ua.isCorrect) {
-                    allBtns[selectedIdx].classList.add('wrong');
-                } else {
-                    allBtns[selectedIdx].classList.add('correct');
-                }
-                document.getElementById('next-btn').style.display = 'block';
-            }
+            ws.innerHTML = html;
         }
 
-        function checkAnswer(selected, btn) {
-            const q = questions[currentIdx];
-            const allBtns = document.querySelectorAll('.option');
+        document.getElementById('progress-bar').style.width = '100%';
+        show('result-screen');
+    }
 
-            allBtns.forEach(b => b.disabled = true);
-
-            userAnswers[currentIdx] = {
-                question: q.question,
-                selected: q.options[selected],
-                correct: q.options[q.answer],
-                isCorrect: selected === q.answer
-            };
-
-            if (selected === q.answer) {
-                btn.classList.add('correct');
-                score++;
-            } else {
-                btn.classList.add('wrong');
-                allBtns[q.answer].classList.add('correct');
-            }
-
-            document.getElementById('next-btn').style.display = 'block';
-        }
-
-        function nextQuestion() {
-            currentIdx++;
-            loadQuestion();
-            window.scrollTo(0, 0);
-        }
-
-        function prevQuestion() {
-            if (currentIdx > 0) {
-                currentIdx--;
-                loadQuestion();
-                window.scrollTo(0, 0);
-            }
-        }
-
-        function restartQuiz() {
-            currentIdx = 0;
-            score = 0;
-            userAnswers = [];
-
-            // Reset progress bar
-            document.getElementById('progress-bar').style.width = '0%';
-
-            // Hide result screen and show quiz screen
-            document.getElementById('result-screen').classList.add('hidden');
-            document.getElementById('quiz-screen').classList.remove('hidden');
-
-            questions = JSON.parse(JSON.stringify(originalQuestions));
-
-            if (shuffleQuestionsEnabled) {
-                questions.sort(() => Math.random() - 0.5);
-            }
-
-            if (shuffleAnswersEnabled) {
-                questions.forEach(q => {
-                    const correctAnswer = q.options[q.answer];
-                    // Create array of indices and shuffle them
-                    const indices = q.options.map((_, i) => i);
-                    for (let i = indices.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [indices[i], indices[j]] = [indices[j], indices[i]];
-                    }
-                    // Reorder options
-                    const newOptions = indices.map(i => q.options[i]);
-                    q.options = newOptions;
-                    q.answer = q.options.indexOf(correctAnswer);
-                });
-            }
-
-            loadQuestion();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function showResult() {
-            document.getElementById('quiz-screen').classList.add('hidden');
-            document.getElementById('result-screen').classList.remove('hidden');
-            document.getElementById('progress-bar').style.width = '100%';
-            document.getElementById('final-score').innerText = `${score} / ${questions.length}`;
-
-            const wrongAnswersSection = document.getElementById('wrong-answers-section');
-            const wrongAnswers = userAnswers.filter(a => !a.isCorrect);
-
-            if (wrongAnswers.length === 0) {
-                wrongAnswersSection.innerHTML = '<h3>Perfect Score! 🎉</h3><p>You got all questions correct!</p>';
-            } else {
-                let html = '<h3>Review Wrong Answers:</h3>';
-                wrongAnswers.forEach((wa, idx) => {
-                    html += `
-                        <div class="wrong-item">
-                            <strong>Question ${idx + 1}:</strong> ${wa.question}<br>
-                            <span style="color: var(--wrong);">❌ Your answer: ${wa.selected}</span><br>
-                            <span style="color: var(--correct);">✓ Correct answer: ${wa.correct}</span>
-                        </div>
-                    `;
-                });
-                wrongAnswersSection.innerHTML = html;
-            }
-        }
-
-        // Start the quiz on load
-        window.addEventListener('load', startQuiz);
+    // ---- Init ----
+    window.addEventListener('load', buildSelectScreen);
+    window.onbeforeunload = () => activeQuiz ? "Reloading will reset your quiz progress." : undefined;
     </script>
 </body>
-
 </html>
