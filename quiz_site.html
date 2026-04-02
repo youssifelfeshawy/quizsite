@@ -1066,13 +1066,11 @@
     let score = 0;
     let userAnswers = [];
 
-    // ---- Theme ----
     function toggleTheme() {
         document.body.classList.toggle('light');
         document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
     }
 
-    // ---- Build selection screen ----
     function buildSelectScreen() {
         const grid = document.getElementById('quiz-grid');
         grid.innerHTML = '';
@@ -1093,19 +1091,18 @@
         });
     }
 
-    // ---- Navigation ----
     function show(id) {
         ['select-screen','quiz-screen','result-screen'].forEach(s => {
             document.getElementById(s).classList.toggle('hidden', s !== id);
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+
     function goHome() {
         activeQuiz = null;
         show('select-screen');
     }
 
-    // ---- Start quiz ----
     function startQuiz(quiz) {
         activeQuiz = quiz;
         currentIdx = 0;
@@ -1118,7 +1115,6 @@
         loadQuestion();
     }
 
-    // ---- Prepare questions (shuffle) ----
     function prepare(qs, quiz) {
         if (quiz.shuffleQuestions) qs.sort(() => Math.random() - 0.5);
         if (quiz.shuffleAnswers) {
@@ -1127,7 +1123,6 @@
                 const correctIndices = isMulti ? [...q.answer] : [q.answer];
                 const correctTexts = correctIndices.map(i => q.options[i]);
 
-                // Shuffle options
                 const indices = q.options.map((_, i) => i);
                 for (let i = indices.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
@@ -1135,7 +1130,6 @@
                 }
                 q.options = indices.map(i => q.options[i]);
 
-                // Update correct answer index(es)
                 if (isMulti) {
                     q.answer = correctTexts.map(txt => q.options.indexOf(txt));
                 } else {
@@ -1146,7 +1140,6 @@
         return qs;
     }
 
-    // ---- Load question (NOW SUPPORTS MULTI-SELECT) ----
     function loadQuestion() {
         if (currentIdx >= questions.length) { showResult(); return; }
 
@@ -1168,42 +1161,73 @@
         q.options.forEach((opt, i) => {
             const div = document.createElement('div');
             div.className = 'option';
-            div.innerHTML = `
-                <input type="${isMulti ? 'checkbox' : 'radio'}" name="answer" id="opt-${i}">
-                <label for="opt-${i}" style="flex:1;cursor:pointer;">
+
+            if (isMulti) {
+                // MULTI-SELECT → checkboxes
+                div.innerHTML = `
+                    <input type="checkbox" id="opt-${i}">
+                    <label for="opt-${i}" style="flex:1;cursor:pointer;">
+                        <span class="option-letter">${letters[i]}.</span><span>${opt}</span>
+                    </label>
+                `;
+            } else {
+                // SINGLE-SELECT → radio + instant click (your requested old behavior)
+                div.innerHTML = `
                     <span class="option-letter">${letters[i]}.</span><span>${opt}</span>
-                </label>
-            `;
+                `;
+                div.onclick = () => checkAnswer(i, div);
+            }
             container.appendChild(div);
         });
 
-        // Show correct buttons
+        // Button visibility
         const prevBtn = document.getElementById('prev-btn');
         const submitBtn = document.getElementById('submit-btn');
         const nextBtn = document.getElementById('next-btn');
 
         prevBtn.classList.toggle('hidden', currentIdx === 0);
-        submitBtn.classList.toggle('hidden', !isMulti);
+        submitBtn.classList.toggle('hidden', !isMulti);   // only show for multi
         nextBtn.classList.add('hidden');
 
-        // If already answered → restore state
+        // Restore previous answer if exists
         const ua = userAnswers[currentIdx];
         if (ua) {
-            const inputs = container.querySelectorAll('input');
             if (isMulti) {
-                ua.selected.forEach(selIdx => inputs[selIdx].checked = true);
-            } else {
-                inputs[ua.selected].checked = true;
+                const inputs = container.querySelectorAll('input');
+                ua.selected.forEach(idx => inputs[idx].checked = true);
             }
             markAnswer(ua);
             nextBtn.classList.remove('hidden');
         }
     }
 
-    // ---- Submit multi-select answer ----
+    // Instant answer for single-select (your requested old behavior)
+    function checkAnswer(selected, btn) {
+        const q = questions[currentIdx];
+        if (Array.isArray(q.answer)) return; // safety
+
+        const isCorrect = selected === q.answer;
+
+        userAnswers[currentIdx] = {
+            question: q.question,
+            selected: selected,
+            correct: q.answer,
+            isCorrect,
+            isMulti: false
+        };
+
+        if (isCorrect) score++;
+
+        const allOptions = document.querySelectorAll('.option');
+        allOptions.forEach(opt => opt.style.pointerEvents = 'none');
+        markAnswer(userAnswers[currentIdx]);
+
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    // Submit for multi-select only
     function submitAnswer() {
         const q = questions[currentIdx];
-        const isMulti = Array.isArray(q.answer);
         const container = document.getElementById('options-container');
         const inputs = container.querySelectorAll('input');
         let selected = [];
@@ -1214,7 +1238,7 @@
 
         if (selected.length === 0) return;
 
-        const correct = isMulti ? q.answer : [q.answer];
+        const correct = q.answer;
         const isCorrect = JSON.stringify(selected.sort((a,b)=>a-b)) === JSON.stringify(correct.sort((a,b)=>a-b));
 
         userAnswers[currentIdx] = {
@@ -1222,7 +1246,7 @@
             selected: selected,
             correct: correct,
             isCorrect,
-            isMulti
+            isMulti: true
         };
 
         if (isCorrect) score++;
@@ -1232,59 +1256,23 @@
         document.getElementById('next-btn').classList.remove('hidden');
     }
 
-    // ---- Mark answer (single OR multi) ----
     function markAnswer(ua) {
         const container = document.getElementById('options-container');
-        const inputs = container.querySelectorAll('input');
-        const divs = container.querySelectorAll('.option');
+        const options = container.querySelectorAll('.option');
+        const correctSet = new Set(Array.isArray(ua.correct) ? ua.correct : [ua.correct]);
 
-        // Disable all inputs
-        inputs.forEach(inp => inp.disabled = true);
-
-        const correctSet = new Set(ua.correct);
-
-        divs.forEach((div, i) => {
-            const isSelected = ua.selected.includes(i);
+        options.forEach((opt, i) => {
+            const isSelected = ua.selected.includes ? ua.selected.includes(i) : ua.selected === i;
             const isCorrectOption = correctSet.has(i);
 
-            if (isCorrectOption) {
-                div.classList.add('correct');
-            } else if (isSelected) {
-                div.classList.add('wrong');
-            }
+            if (isCorrectOption) opt.classList.add('correct');
+            else if (isSelected) opt.classList.add('wrong');
         });
-    }
-
-    // ---- Check single-select answer (kept for compatibility) ----
-    function checkAnswer(selected, btn) {
-        const q = questions[currentIdx];
-        const isMulti = Array.isArray(q.answer);
-        if (isMulti) return; // multi uses submit button
-
-        const correct = q.answer;
-        const isCorrect = selected === correct;
-
-        userAnswers[currentIdx] = {
-            question: q.question,
-            selected: selected,
-            correct: correct,
-            isCorrect,
-            isMulti: false
-        };
-
-        if (isCorrect) score++;
-
-        const allBtns = document.querySelectorAll('.option');
-        allBtns.forEach(b => b.style.pointerEvents = 'none');
-        markAnswer(userAnswers[currentIdx]);
-
-        document.getElementById('next-btn').classList.remove('hidden');
     }
 
     function nextQuestion() { currentIdx++; loadQuestion(); window.scrollTo(0,0); }
     function prevQuestion() { if (currentIdx > 0) { currentIdx--; loadQuestion(); window.scrollTo(0,0); } }
 
-    // ---- Restart ----
     function restartQuiz() {
         currentIdx = 0; score = 0; userAnswers = [];
         questions = prepare(JSON.parse(JSON.stringify(originalQuestions)), activeQuiz);
@@ -1293,7 +1281,6 @@
         loadQuestion();
     }
 
-    // ---- Results ----
     function showResult() {
         document.getElementById('result-quiz-title').textContent = activeQuiz.title + ' — Results';
         document.getElementById('final-score').textContent = `${score}/${questions.length}`;
@@ -1311,10 +1298,16 @@
         } else {
             let html = '<h3>Review Wrong Answers</h3>';
             wrongs.forEach((wa, i) => {
+                const userAns = wa.isMulti 
+                    ? wa.selected.map(idx => String.fromCharCode(65 + idx)).join(', ')
+                    : String.fromCharCode(65 + wa.selected);
+                const correctAns = wa.isMulti 
+                    ? wa.correct.map(idx => String.fromCharCode(65 + idx)).join(', ')
+                    : String.fromCharCode(65 + wa.correct);
                 html += `<div class="wrong-item">
                     <div class="q">${i+1}. ${wa.question}</div>
-                    <div class="ans-wrong">✗ Your answer: ${wa.isMulti ? wa.selected.map(idx => String.fromCharCode(65+idx)).join(', ') : String.fromCharCode(65+wa.selected)}</div>
-                    <div class="ans-correct">✓ Correct: ${wa.isMulti ? wa.correct.map(idx => String.fromCharCode(65+idx)).join(', ') : String.fromCharCode(65+wa.correct)}</div>
+                    <div class="ans-wrong">✗ Your answer: ${userAns}</div>
+                    <div class="ans-correct">✓ Correct: ${correctAns}</div>
                 </div>`;
             });
             ws.innerHTML = html;
@@ -1323,7 +1316,6 @@
         show('result-screen');
     }
 
-    // ---- Init ----
     window.addEventListener('load', buildSelectScreen);
     window.onbeforeunload = () => activeQuiz ? "Reloading will reset your quiz progress." : undefined;
     </script>
