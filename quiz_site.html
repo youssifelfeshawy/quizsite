@@ -33,6 +33,7 @@
             --glow: rgba(90,82,224,0.15);
         }
         *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
         body {
             font-family: 'DM Sans', sans-serif;
             background: var(--bg);
@@ -44,6 +45,8 @@
             padding: 30px 16px 60px;
             transition: background 0.4s, color 0.4s;
         }
+
+        /* Ambient background glow */
         body::before {
             content: '';
             position: fixed;
@@ -54,6 +57,7 @@
             pointer-events: none;
             z-index: 0;
         }
+
         .theme-toggle {
             position: fixed; top: 20px; right: 20px; z-index: 100;
             background: var(--card); border: 1px solid var(--border);
@@ -63,11 +67,15 @@
             transition: all 0.3s;
         }
         .theme-toggle:hover { border-color: var(--accent); }
+
         .wrap {
             position: relative; z-index: 1;
             width: 100%; max-width: 720px;
         }
+
+        /* ===== SELECTION SCREEN ===== */
         #select-screen { animation: fadeUp 0.5s ease; }
+
         .brand {
             text-align: center;
             margin-bottom: 48px;
@@ -88,11 +96,13 @@
             margin-top: 10px;
             font-size: 1rem;
         }
+
         .quiz-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 16px;
         }
+
         .quiz-card {
             background: var(--card);
             border: 1px solid var(--border);
@@ -110,12 +120,13 @@
             opacity: 0;
             transition: opacity 0.25s;
         }
-        .quiz-card:hover {
+        .quiz-card:hover { 
             border-color: var(--accent);
             transform: translateY(-3px);
             box-shadow: 0 12px 40px var(--glow);
         }
         .quiz-card:hover::before { opacity: 0.04; }
+
         .quiz-card-icon {
             font-size: 2rem;
             margin-bottom: 14px;
@@ -147,7 +158,10 @@
             font-weight: 500;
         }
         .badge.accent { background: rgba(108,99,255,0.15); color: var(--accent); }
+
+        /* ===== QUIZ SCREEN ===== */
         #quiz-screen { animation: fadeUp 0.4s ease; }
+
         .quiz-header {
             display: flex;
             align-items: center;
@@ -167,6 +181,7 @@
             white-space: nowrap;
         }
         .back-btn:hover { border-color: var(--accent); color: var(--accent); }
+
         .quiz-title-bar {
             flex: 1;
         }
@@ -179,6 +194,7 @@
             color: var(--muted);
             font-size: 0.8rem;
         }
+
         .progress-wrap {
             background: var(--border);
             border-radius: 99px;
@@ -192,6 +208,7 @@
             transition: width 0.4s cubic-bezier(.4,0,.2,1);
             border-radius: 99px;
         }
+
         .q-meta {
             color: var(--muted);
             font-size: 0.82rem;
@@ -200,6 +217,7 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+
         .question {
             font-family: 'Syne', sans-serif;
             font-size: 1.2rem;
@@ -207,7 +225,9 @@
             margin-bottom: 24px;
             line-height: 1.45;
         }
+
         .options-grid { display: grid; gap: 10px; }
+
         .option {
             display: flex; align-items: center; gap: 14px;
             padding: 14px 18px;
@@ -225,21 +245,26 @@
             border-color: var(--accent);
             background: var(--surface);
         }
-        .option input[type="checkbox"],
-        .option input[type="radio"] {
-            accent-color: var(--accent);
-            width: 22px; height: 22px;
+        .option-letter {
+            font-family: 'Syne', sans-serif;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 22px;
+            font-size: 0.9rem;
         }
         .option.correct {
             background: rgba(34,211,160,0.1) !important;
             border-color: var(--correct) !important;
             color: var(--correct) !important;
         }
+        .option.correct .option-letter { color: var(--correct) !important; }
         .option.wrong {
             background: rgba(255,92,122,0.1) !important;
             border-color: var(--wrong) !important;
             color: var(--wrong) !important;
         }
+        .option.wrong .option-letter { color: var(--wrong) !important; }
+
         .btn-row {
             display: flex; gap: 10px; margin-top: 20px;
         }
@@ -265,7 +290,10 @@
             color: var(--text);
         }
         .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+        /* ===== RESULT SCREEN ===== */
         #result-screen { animation: fadeUp 0.4s ease; }
+
         .result-header { text-align: center; margin-bottom: 32px; }
         .result-header h2 {
             font-family: 'Syne', sans-serif;
@@ -297,6 +325,7 @@
             color: var(--muted);
             margin-top: 4px;
         }
+
         .wrong-section {
             background: var(--card);
             border: 1px solid var(--border);
@@ -321,7 +350,10 @@
         .wrong-item .q { font-weight: 600; margin-bottom: 6px; }
         .ans-wrong { color: var(--wrong); }
         .ans-correct { color: var(--correct); }
+
         .result-btns { display: flex; gap: 10px; }
+
+        /* Utility */
         .hidden { display: none !important; }
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(20px); }
@@ -331,7 +363,9 @@
 </head>
 <body>
     <button class="theme-toggle" onclick="toggleTheme()" title="Toggle theme">☀️</button>
+
     <div class="wrap">
+
         <!-- SELECTION SCREEN -->
         <div id="select-screen">
             <div class="brand">
@@ -356,7 +390,6 @@
             <div class="options-grid" id="options-container"></div>
             <div class="btn-row">
                 <button id="prev-btn" class="btn btn-ghost hidden" onclick="prevQuestion()">← Prev</button>
-                <button id="submit-btn" class="btn btn-primary hidden" onclick="submitAnswer()">Submit Answer</button>
                 <button id="next-btn" class="btn btn-primary hidden" onclick="nextQuestion()">Next →</button>
             </div>
         </div>
@@ -377,6 +410,7 @@
                 <button class="btn btn-primary" onclick="restartQuiz()">🔄 Restart</button>
             </div>
         </div>
+
     </div>
 
     <script>
@@ -384,103 +418,6 @@
     // QUIZ DATA — Add as many quizzes as you like!
     // ============================================================
     const ALL_QUIZZES = [
-        {
-            id: "comptia",
-            icon: "🖥️",
-            title: "CompTIA A+ 220-1201",
-            description: "Hardware, networking, troubleshooting, virtualization, mobile devices, security, and cloud computing — based on real CompTIA 220-1201 exam questions.",
-            shuffleQuestions: false,
-            shuffleAnswers: false,
-            questions: [
-                { question: "Which of the following are radio frequency connections? (Select two.)", options: ["Cable", "Satellite", "DSL", "Cellular", "Ethernet", "Fiber"], answer: [1, 3] },
-                { question: "Which option best types of RAM is typically used in servers?", options: ["SODIMM", "Rambus", "DDR3", "ECC"], answer: 3 },
-                { question: "A salesperson is unable to reach the internet from a home office PC A support technician wants to verify the router is receiving a valid public IP address Which of the Wowing is a valid public IP address in this scenario?", options: ["10.254.128.11", "66.157.195.20", "172.16.0.30", "192.168 1.50"], answer: 1 },
-                { question: "A user routinely connects and disconnects multiple devices from a laptop. Which of the following options should a technician recommend to facilitate ease of user mobility?", options: ["Serial interfaces", "Docking station", "Network switch", "USB hub"], answer: 1 },
-                { question: "Which option best should a technician check when the display of a computer Is flickering?", options: ["LCD type", "Refresh rate", "Screen resolution", "Pixel density"], answer: 1 },
-                { question: "A user reports that scanned or copied pages from an MFP show vertical lines down the page. The printer processes print jobs correctly. What should the technician do?", options: ["Replace the transfer roller", "Remove the pickup rollers", "Clean the glass bed", "Apply a maintenance kit"], answer: 2 },
-                { question: "Which of the following will most likely be used in a testing environment to execute unauthorized or experimental code without affecting production systems?", options: ["Virtual machines", "Hybrid cloud", "Load balancers", "Application gateways"], answer: 0 },
-                { question: "A technician is setting up a workstation. Which of the following settings should the technician configure to ensure that users can connect to the network? (Select three).", options: ["APIPA", "Gateway", "IP address", "Subnet mask", "Static routes", "UPnP settings", "NAT rules", "MAC filters"], answer: [1, 2, 3] },
-                { question: "Which of the following ports should a technician disable to increase the security of remote connectivity?", options: ["22", "23", "25", "53"], answer: 1 },
-                { question: "A technician is having issues replacing a laptop's wireless card because the cover seems to be stuck Which of the following should the technician do next to troubleshoot this issued", options: ["Check the product manual for the procedure", "Use a pry tool to force the cover open", "Insert the wireless card into the M.2 slot", "Try to move the cover by sliding it in all directions."], answer: 0 },
-                { question: "A customer reports a problem connecting to network resources. After asking open-ended questions, the technician determines the issue likely exists on the remote server. Which of the following should the technician do next?", options: ["Document the findings.", "Test the theory", "Gather information", "Establish a plan of action"], answer: 1 },
-                { question: "Which option best devices has ACL capabilities?", options: ["PoE injector", "DSL", "Firewall", "Unmanaged switch"], answer: 2 },
-                { question: "Which of the following internet connection types is the best for extremely high data transfer with symmetrical upload and download speeds?", options: ["DSL", "Cellular", "Fiber", "Satellite"], answer: 2 },
-                { question: "Which option best ports is commonly used for remote desktop connections?", options: ["137", "445", "3389", "4443"], answer: 2 },
-                { question: "A user brings a laptop to work every morning, correctly seats it in the docking station and then opens the laptop to begin work with no issues After the user left the laptop at home during a two-week vacation the laptop is no longer working. Upon returning to the office, the user reports that the keyboard and display are no longer working Which of the following should the technician ask the user to do first?", options: ["Ensure the docking station is plugged in.", "Press and release the laptop power button.", "Plug the laptop in and let it charge overnight", "Connect the laptop directly to the network."], answer: 1 },
-                { question: "A technician is setting up a new SOHO wireless router. According to security best practices, which of the following should the technician do first?", options: ["Enable encryption.", "Assign a static IP.", "Change the default password.", "Reset the router."], answer: 2 },
-                { question: "A group of friends is gathering in a room to play video games. One of the friends has a game server. Which of the following network types should the group use so they can all connect to the same server and the internet?", options: ["SAN", "MAN", "LAN", "PAN"], answer: 2 },
-                { question: "A company uses vital legacy software that does not run in the current OS version Which option best will best support the software while keeping the OS current?", options: ["Shared resources", "System sandbox", "Test development", "Application visualization"], answer: 3 },
-                { question: "A company is separating its accounting department's network from its customer service department's network. Which of the following will accomplish this task?", options: ["VPN", "DNS", "VLAN", "DHCP"], answer: 2 },
-                { question: "Which of the following is an isolated virtual machine?", options: ["Sandbox", "Hypervisor", "Container", "VDI"], answer: 0 },
-                { question: "A technician receives several complaints from the same office about VoIP calls sounding broken up, being difficult to hear, and having lagging audio. The technician arrives on-site and runs an internet speed test on several wired and wireless computers. Internet speed seems normal throughout the office. Which of the following should the technician do to fix the call issues?", options: ["Enable QoS in the router.", "Configure PoE on the switch.", "Change the encryption from WPA3 to WPA2.", "Turn on MAC address filtering."], answer: 0 },
-                { question: "A technician needs to figure out why a laser printer is intermittently not feeding paper to print. The technician verifies the issue by running several copy-and-print tests. Which option best should the technician do next?", options: ["Update the printer drivers.", "Select the correct paper size.", "Clean the pickup rollers.", "Replace the toner cartridge."], answer: 2 },
-                { question: "A user reports that scanned or copied pages from an MFP show vertical lines down the page. The printer processes print jobs correctly. What should the technician do?", options: ["Replace the transfer roller", "Remove the pickup rollers", "Clean the glass bed", "Apply a maintenance kit"], answer: 2 },
-                { question: "Which of the following will most likely be used in a testing environment to execute unauthorized or experimental code without affecting production systems?", options: ["Virtual machines", "Hybrid cloud", "Load balancers", "Application gateways"], answer: 0 },
-                { question: "A technician is setting up a workstation. Which option best settings should the technician configure to ensure that users can connect to the network? (Select three).", options: ["APIPA", "Gateway", "IP address", "Subnet mask", "Static routes", "UPnP settings", "NAT rules", "MAC filters"], answer: [1, 2, 3] },
-                { question: "Which option best ports should a technician disable to increase the security of remote connectivity?", options: ["22", "23", "25", "53"], answer: 1 },
-                { question: "A technician is having issues replacing a laptop's wireless card because the cover seems to be stuck Which option best should the technician do next to troubleshoot this issued", options: ["Check the product manual for the procedure", "Use a pry tool to force the cover open", "Insert the wireless card into the M.2 slot", "Try to move the cover by sliding it in all directions."], answer: 0 },
-                { question: "A user is having trouble with the location services on their smartphone. Location-based applications show incorrect positions when the user is traveling. This issue affects the user's ability to navigate and use location-dependent applications. Which of the following is the best way to resolve this issue?", options: ["Downloading a third-party mapping application", "Resetting the network settings", "Enabling Wi-Fi to assist GPS", "Restarting the smartphone"], answer: 2 },
-                { question: "Which of the following statements is true when comparing DDR3 RAM and DDR4 RAM?", options: ["DDR4 offers faster data transfer rates compared to DDR3.", "DDR3 is capable of achieving higher bandwidth than DDR4.", "DDR4 operates at a higher voltage than DDR3.", "DDR3 is better suited for low-power environments than DDR4."], answer: 0 },
-                { question: "A technician needs to figure out why a laser printer is intermittently not feeding paper to print. The technician verifies the issue by running several copy-and-print tests. Which of the following should the technician do next?", options: ["Update the printer drivers.", "Select the correct paper size.", "Clean the pickup rollers.", "Replace the toner cartridge."], answer: 2 },
-                { question: "Which of the following are radio frequency connections? (Select two.)", options: ["Cable", "Satellite", "DSL", "Cellular", "Ethernet", "Fiber"], answer: [1, 3] },
-                { question: "Which option best types of RAM is typically used in servers?", options: ["SODIMM", "Rambus", "DDR3", "ECC"], answer: 3 },
-                { question: "A salesperson is unable to reach the internet from a home office PC A support technician wants to verify the router is receiving a valid public IP address Which of the Wowing is a valid public IP address in this scenario?", options: ["10.254.128.11", "66.157.195.20", "172.16.0.30", "192.168 1.50"], answer: 1 },
-                { question: "A user routinely connects and disconnects multiple devices from a laptop. Which of the following options should a technician recommend to facilitate ease of user mobility?", options: ["Serial interfaces", "Docking station", "Network switch", "USB hub"], answer: 1 },
-                { question: "Which of the following should a technician check when the display of a computer Is flickering?", options: ["LCD type", "Refresh rate", "Screen resolution", "Pixel density"], answer: 1 },
-                { question: "A technician is troubleshooting a desktop PC that is plugged into a UPS. The PC loses the system date/time after every power outage. Which of the following should the technician do to resolve the issue? (Select two).", options: ["Run a BIOS update.", "Swap out the RAM.", "Disable NTP in the OS.", "Repair the backup power source.", "Replace the CMOS battery", "Install a surge protector."], answer: [3, 4] },
-                { question: "A systems administrator deploys BitLocker to all devices. However, one of the desktop PCs is not able to encrypt the boot drive. Which of the following should the administrator check?", options: ["TPM", "CPU", "RAM", "HDD"], answer: 0 },
-                { question: "Which of the following technologies best allows a phone to connect to a point-of-sale terminal for wireless payments?", options: ["Bluetooth", "NFC", "Wi-Fi", "Cellular"], answer: 1 },
-                { question: "A user connects their laptop to a projector in a conference room. Once connected, the userreports the screen is smaller at the bottom than at the top. The user tries restarting the laptop and then disconnecting and reconnecting the cable to the projector. Which of the following should a technician do to resolve the issue?", options: ["Replace the HDMI cable.", "Power cycle the projector.", "Adjust the keystone", "Increase the resolution."], answer: 2 },
-                { question: "A user is having issues when charging a device with a Lightning cable. The cable is not recognized when it is plugged into the device. This issue is usually resolved by flipping the cable over. This issue does not occur with other devices of the same type. Which of the following would most likely cause the issue?", options: ["The device needs to be restarted.", "The battery may be swelling and needs inspection.", "The cable is failing and needs to be replaced", "The charging port is dirty or damaged"], answer: 3 },
-                { question: "Which of the following should a technician use to terminate a Cat 6 cable to a patch panel?", options: ["Punchdown tool", "Crimper", "Toner probe", "Network tap"], answer: 0 },
-                { question: "A customer reports their tablet was recently dropped on the ground. The tablet has a small crack in one corner of the display, and it does not charge when plugged in. Which of the following should a technician do first?", options: ["Perform a hard restart.", "Replace the battery", "Inspect the USB-C port for damage", "Run diagnostics on the digitizer"], answer: 2 },
-                { question: "Which of the following is a Bluetooth network an example of?", options: ["PAN", "LAN", "WAN", "SAN"], answer: 0 },
-                { question: "A technician installs an upgraded wireless access point. The technician then notices the activity light comes on briefly and turns off. The access point continues to exhibit this behavior repeatedly and does not come online. Which of the following is the most likely cause of this issue?", options: ["High latency", "Port flapping", "External interference", "Channel conflict"], answer: 1 },
-                { question: "A technician needs to prepare a conference room for a meeting. The technician connects the laptop to the LCD projector and audio system, and then verifies the connectivity of each device. The meeting begins, but the visual presentation suddenly cuts off 30 minutes later. The audio continues to play without interruption. The technician brings in a backup laptop and connects it to the projector. The meeting continues without issue for 15 minutes until the presentation suddenly cuts off again. Which of the following should the technician do to resolve this issue?", options: ["Check the laptop's audio output", "Verify the input source", "Examine the display for burn-in", "Inspect the cables for damage", "Clean or replace the filter"], answer: 4 },
-                { question: "A technician needs to update a web server's IPv4 address in a DNS server. Which of the following records should the technician update?", options: ["AAAA", "MX", "CNAME", "A"], answer: 3 },
-                { question: "A technician receives several complaints from the same office about VoIP calls sounding broken up, being difficult to hear, and having lagging audio. The technician arrives on-site and runs an internet speed test on several wired and wireless computers. Internet speed seems normal throughout the office. Which of the following should the technician do to fix the call issues?", options: ["Enable QoS in the router", "Configure PoE on the switch", "Change the encryption from WPA3 to WPA2", "Turn on MAC address filtering"], answer: 0 },
-                { question: "Which of the following connector types is associated with coaxial terminations serving cable internet deployments?", options: ["DB9", "ST", "F-type", "RJ45"], answer: 2 },
-                { question: "Which of the following is a characteristic of an NVMe drive?", options: ["M.2 interface", "3.5in (8.9cm) external", "7,200rpm", "Molex connector"], answer: 0 },
-                { question: "Which of the following is an advantage of using a hybrid cloud instead of a public cloud?", options: ["Ability to reduce management overhead", "Ability to use cross-platform virtualization", "Ability to meet data residency requirements", "Ability to leverage IaaS and PaaS"], answer: 2 },
-                { question: "A company deploys server machines in a public cloud. Which of the following cloud service models is this an example of?", options: ["Platform as a service", "Anything as a service", "Infrastructure as a service", "Software as a service"], answer: 2 },
-                { question: "Which of the following tools would a technician use to connect wires to an RJ45 connector?", options: ["Crimper", "Cable stripper", "Punchdown", "Loopback plug"], answer: 0 },
-                { question: "A computer is experiencing random shutdowns. A technician notices that the fans on the computer work but are noisy. The CPU temperature is about 122F (50C) when the computer is started but rises to 208F (98C) when applications are opened. Which of the following would most likely fix this issue?", options: ["Replacing the power supply", "Installing a high-performance heat sink", "Adjusting the fan settings", "Adding more RAM to the computer"], answer: 1 },
-                { question: "A customer needs to install a new printer in their network. The customer reports that users had intermittent connectivity issues with previous printers. Which of the following should the technician configure on the new printer to prevent this issue?", options: ["Gateway IP address", "DHCP IP address", "Static IP address", "Public IP address"], answer: 2 },
-                { question: "A technician is troubleshooting an all-in-one laser printer that prints a vertical line when making copies and scans. When users print or receive faxes, the output from the printer is correct. Which of the following should the technician examine to determine the cause of the issue?", options: ["The pickup rollers", "The corona wire", "The document feeder", "The drum assembly"], answer: 2 },
-                { question: "Which of the following technologies best allows a phone to connect to a point-of-sale terminal for wireless payments?", options: ["Bluetooth", "NFC", "Wi-Fi", "Cellular"], answer: 1 },
-                { question: "Which of the following is a Bluetooth network an example of?", options: ["PAN", "LAN", "WAN", "SAN"], answer: 0 },
-                { question: "Which of the following best represents the purpose of NFC?", options: ["Wired connections between several devices", "Short-distance wireless connections between two devices", "Wireless connections between multiple devices at once", "Direct connection of two computers for file sharing"], answer: 1 },
-                { question: "Which of the following provides electricity to devices through network cables?", options: ["Edge router", "PoE switch", "Access point", "Patch panel"], answer: 1 },
-                { question: "A technician receives a notification after a network outage that indicates the printer is not reachable. Which of the following printer settings should the technician implement to prevent this issue in the future?", options: ["Gateway", "Static IP", "APIPA", "DHCP"], answer: 1 },
-                { question: "A user cannot see the office multifunction printer in their laptop's print options. They have printed to the device in the past successfully. The user's laptop is connected to the guest wireless network. Other users on both wireless and wired computers can see and print to the printer. Which of the following will fix the issue?", options: ["Power cycle the printer to refresh connectivity.", "Reset the closest wireless AP.", "Download the printer driver from the manufacturer's website.", "Connect the laptop to the corporate Wi-Fi."], answer: 3 },
-                { question: "Which of the following is an isolated virtual machine?", options: ["Sandbox", "Hypervisor", "Container", "VDI"], answer: 0 },
-                { question: "A user connects a company-issued laptop to a 4K TV but can only get 1080p resolution on the TV. The technician confirms that the laptop is capable of producing a 4K output. Which of the following is the most likely cause of the issue?", options: ["The TV firmware is out of date", "The HDMI cable version is incorrect", "The laptop firmware is not current", "The CPU cannot keep up with the transcoding"], answer: 1 },
-                { question: "A company wants to use cloud services with the requirement that data will reside on physical hardware that will not be shared with other companies. Which of the following meets this requirement?", options: ["Dedicated resources", "Elasticity", "Hybrid cloud", "SaaS"], answer: 0 },
-                { question: "A company policy change requires all computers to be encrypted. Which of the following technologies should a technician configure to meet this new requirement?", options: ["NVMe", "RISC", "ARM", "TPM"], answer: 3 },
-                { question: "An IT specialist is setting up a new, custom computer. The specialist wants to minimize the number of power cables to keep the internal components organized and uncluttered. Which of the following power supply types should the specialist use?", options: ["Modular", "Redundant", "Linear", "External"], answer: 0 },
-                { question: "Which of the following allows for a beam of light to transmit data through a flexible cable?", options: ["Coaxial", "HDMI", "Thunderbolt", "Single-mode fiber"], answer: 3 },
-                { question: "A technician is troubleshooting a workstation that repeatedly shuts down within ten minutes of being turned on. The technician notices a loud clicking sound coming from inside the case. Which of the following components should the technician check first?", options: ["Exhaust fan", "Capacitors", "CPU fan", "Intake fan"], answer: 2 },
-                { question: "A network printer does not release a user's final print job from the queue, but the user's other print jobs successfully printed a few moments before. Other users can print without issues. Which of the following should the user check first to solve the issue?", options: ["If the print job is configured to a tray or manual feed", "If the computer and printer are connected to the same network", "If the print queue is full and will not allow additional jobs", "If the printer has stopped due to empty trays"], answer: 0 },
-                { question: "A major retailer is moving its online shopping website to the cloud and wants to expand its server resources as needed during busier shopping days. Which of the following should the retailer consider?", options: ["Location", "Elasticity", "Availability", "Multitenancy"], answer: 1 },
-                { question: "Which drive interface is typically used in server systems but not in home computers?", options: ["NVMe", "SAS", "SATA", "PCIe"], answer: 1 },
-                { question: "Which of the following describes the function of an injector?", options: ["To provide only data connectivity", "To supply power across a cable", "To improve wireless performance", "To extend a network connection"], answer: 1 },
-                { question: "A network administrator must ensure that a printer will still be assigned a specific IP address even if all addresses are depleted. Which of the following network configuration concepts is this describing?", options: ["VLAN", "Lease", "Reservation", "Exclusion"], answer: 2 },
-                { question: "A help desk technician inspects a laptop keyboard because a single key has stopped working. The technician checks the keyboard for debris. Which of the following actions should the technician do next to troubleshoot the issue cost-effectively?", options: ["Replace the keyboard.", "Replace the key switch", "Replace the circuit board.", "Replace the keycap"], answer: 3 },
-                { question: "A customer is able to print most documents with their USB inkjet printer, but the system is unresponsive when printing a certain report from a custom application. Nothing will print until the computer is restarted and the printer is power cycled. A technician remotes into the PC and confirms that the spooler stops working when this report is sent. After cleaning the spooler and reinstalling the drivers from the manufacturer's website, the issue persists. No other sites using the application report similar issues. Which of the following is most likely causing the issue?", options: ["The manufacturer is curating content before it reaches the device to preserve ink.", "The application has a bug that the developer needs to address.", "The system is using the PostScript language instead of the PCL.", "Personal preferences have changed and documents with graphics are now online-only"], answer: 1 },
-                { question: "Which of the following is the best to use when testing a file for potential malware?", options: ["Multitenancy", "Test development", "Cross-platform virtualization", "Sandbox"], answer: 3 },
-                { question: "A technician receives a notification after a network outage that indicates the printer is not reachable. Which of the following printer settings should the technician implement to prevent this issue in the future?", options: ["Gateway", "Static IP", "APIPA", "DHCP"], answer: 1 },
-                { question: "A user cannot see the office multifunction printer in their laptop's print options. They have printed to the device in the past successfully. The user's laptop is connected to the guest wireless network. Other users on both wireless and wired computers can see and print to the printer. Which of the following will fix the issue?", options: ["Power cycle the printer to refresh connectivity.", "Reset the closest wireless AP.", "Download the printer driver from the manufacturer's website.", "Connect the laptop to the corporate Wi-Fi."], answer: 3 },
-                { question: "Which of the following is an isolated virtual machine?", options: ["Sandbox", "Hypervisor", "Container", "VDI"], answer: 0 },
-                { question: "A user connects a company-issued laptop to a 4K TV but can only get 1080p resolution on the TV. The technician confirms that the laptop is capable of producing a 4K output. Which of the following is the most likely cause of the issue?", options: ["The TV firmware is out of date", "The HDMI cable version is incorrect", "The laptop firmware is not current", "The CPU cannot keep up with the transcoding"], answer: 1 },
-                { question: "A company wants to use cloud services with the requirement that data will reside on physical hardware that will not be shared with other companies. Which of the following meets this requirement?", options: ["Dedicated resources", "Elasticity", "Hybrid cloud", "SaaS"], answer: 0 },
-                { question: "A company policy change requires all computers to be encrypted. Which of the following technologies should a technician configure to meet this new requirement?", options: ["NVMe", "RISC", "ARM", "TPM"], answer: 3 },
-                { question: "An IT specialist is setting up a new, custom computer. The specialist wants to minimize the number of power cables to keep the internal components organized and uncluttered. Which of the following power supply types should the specialist use?", options: ["Modular", "Redundant", "Linear", "External"], answer: 0 },
-                { question: "Which of the following allows for a beam of light to transmit data through a flexible cable?", options: ["Coaxial", "HDMI", "Thunderbolt", "Single-mode fiber"], answer: 3 },
-                { question: "A technician is troubleshooting a workstation that repeatedly shuts down within ten minutes of being turned on. The technician notices a loud clicking sound coming from inside the case. Which of the following components should the technician check first?", options: ["Exhaust fan", "Capacitors", "CPU fan", "Intake fan"], answer: 2 },
-                { question: "A network printer does not release a user's final print job from the queue, but the user's other print jobs successfully printed a few moments before. Other users can print without issues. Which of the following should the user check first to solve the issue?", options: ["If the print job is configured to a tray or manual feed", "If the computer and printer are connected to the same network", "If the print queue is full and will not allow additional jobs", "If the printer has stopped due to empty trays"], answer: 0 },
-                { question: "A major retailer is moving its online shopping website to the cloud and wants to expand its server resources as needed during busier shopping days. Which of the following should the retailer consider?", options: ["Location", "Elasticity", "Availability", "Multitenancy"], answer: 1 }
-            ]
-        },
         {
             id: "se",
             icon: "💻",
@@ -1066,11 +1003,14 @@
     let score = 0;
     let userAnswers = [];
 
+    // ---- Theme ----
     function toggleTheme() {
         document.body.classList.toggle('light');
-        document.querySelector('.theme-toggle').textContent = document.body.classList.contains('light') ? '🌙' : '☀️';
+        document.querySelector('.theme-toggle').textContent =
+            document.body.classList.contains('light') ? '🌙' : '☀️';
     }
 
+    // ---- Build selection screen ----
     function buildSelectScreen() {
         const grid = document.getElementById('quiz-grid');
         grid.innerHTML = '';
@@ -1091,6 +1031,7 @@
         });
     }
 
+    // ---- Navigation ----
     function show(id) {
         ['select-screen','quiz-screen','result-screen'].forEach(s => {
             document.getElementById(s).classList.toggle('hidden', s !== id);
@@ -1103,13 +1044,16 @@
         show('select-screen');
     }
 
+    // ---- Start quiz ----
     function startQuiz(quiz) {
         activeQuiz = quiz;
         currentIdx = 0;
         score = 0;
         userAnswers = [];
+
         originalQuestions = JSON.parse(JSON.stringify(quiz.questions));
         questions = prepare(JSON.parse(JSON.stringify(quiz.questions)), quiz);
+
         document.getElementById('active-quiz-title').textContent = quiz.title;
         show('quiz-screen');
         loadQuestion();
@@ -1119,27 +1063,20 @@
         if (quiz.shuffleQuestions) qs.sort(() => Math.random() - 0.5);
         if (quiz.shuffleAnswers) {
             qs.forEach(q => {
-                const isMulti = Array.isArray(q.answer);
-                const correctIndices = isMulti ? [...q.answer] : [q.answer];
-                const correctTexts = correctIndices.map(i => q.options[i]);
-
-                const indices = q.options.map((_, i) => i);
-                for (let i = indices.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [indices[i], indices[j]] = [indices[j], indices[i]];
+                const correct = q.options[q.answer];
+                const idx = q.options.map((_,i)=>i);
+                for (let i = idx.length-1; i > 0; i--) {
+                    const j = Math.floor(Math.random()*(i+1));
+                    [idx[i],idx[j]] = [idx[j],idx[i]];
                 }
-                q.options = indices.map(i => q.options[i]);
-
-                if (isMulti) {
-                    q.answer = correctTexts.map(txt => q.options.indexOf(txt));
-                } else {
-                    q.answer = q.options.indexOf(correctTexts[0]);
-                }
+                q.options = idx.map(i => q.options[i]);
+                q.answer = q.options.indexOf(correct);
             });
         }
         return qs;
     }
 
+    // ---- Load question ----
     function loadQuestion() {
         if (currentIdx >= questions.length) { showResult(); return; }
 
@@ -1147,132 +1084,64 @@
         const total = questions.length;
         const pct = (currentIdx / total) * 100;
 
-        document.getElementById('q-meta').textContent = `Question ${currentIdx + 1} of ${total}`;
-        document.getElementById('q-count').textContent = `${currentIdx + 1} / ${total}`;
+        document.getElementById('q-meta').textContent = `Question ${currentIdx+1} of ${total}`;
+        document.getElementById('q-count').textContent = `${currentIdx+1} / ${total}`;
         document.getElementById('progress-bar').style.width = pct + '%';
         document.getElementById('q-text').textContent = q.question;
 
         const container = document.getElementById('options-container');
         container.innerHTML = '';
-
-        const isMulti = Array.isArray(q.answer);
         const letters = ['A','B','C','D','E','F'];
 
         q.options.forEach((opt, i) => {
-            const div = document.createElement('div');
-            div.className = 'option';
-
-            if (isMulti) {
-                // MULTI-SELECT → checkboxes
-                div.innerHTML = `
-                    <input type="checkbox" id="opt-${i}">
-                    <label for="opt-${i}" style="flex:1;cursor:pointer;">
-                        <span class="option-letter">${letters[i]}.</span><span>${opt}</span>
-                    </label>
-                `;
-            } else {
-                // SINGLE-SELECT → radio + instant click (your requested old behavior)
-                div.innerHTML = `
-                    <span class="option-letter">${letters[i]}.</span><span>${opt}</span>
-                `;
-                div.onclick = () => checkAnswer(i, div);
-            }
-            container.appendChild(div);
+            const btn = document.createElement('button');
+            btn.className = 'option';
+            btn.innerHTML = `<span class="option-letter">${letters[i]}.</span><span>${opt}</span>`;
+            btn.onclick = () => checkAnswer(i, btn);
+            container.appendChild(btn);
         });
 
-        // Button visibility
         const prevBtn = document.getElementById('prev-btn');
-        const submitBtn = document.getElementById('submit-btn');
         const nextBtn = document.getElementById('next-btn');
-
         prevBtn.classList.toggle('hidden', currentIdx === 0);
-        submitBtn.classList.toggle('hidden', !isMulti);   // only show for multi
         nextBtn.classList.add('hidden');
+        nextBtn.textContent = currentIdx === total-1 ? 'Submit ✓' : 'Next →';
 
-        // Restore previous answer if exists
+        // Restore answer if already answered
         const ua = userAnswers[currentIdx];
         if (ua) {
-            if (isMulti) {
-                const inputs = container.querySelectorAll('input');
-                ua.selected.forEach(idx => inputs[idx].checked = true);
-            }
-            markAnswer(ua);
+            const allBtns = container.querySelectorAll('.option');
+            allBtns.forEach(b => b.disabled = true);
+            const selIdx = questions[currentIdx].options.indexOf(ua.selected);
+            allBtns[questions[currentIdx].answer].classList.add('correct');
+            if (!ua.isCorrect && selIdx >= 0) allBtns[selIdx].classList.add('wrong');
             nextBtn.classList.remove('hidden');
         }
     }
 
-    // Instant answer for single-select (your requested old behavior)
     function checkAnswer(selected, btn) {
         const q = questions[currentIdx];
-        if (Array.isArray(q.answer)) return; // safety
+        const allBtns = document.querySelectorAll('.option');
+        allBtns.forEach(b => b.disabled = true);
 
         const isCorrect = selected === q.answer;
-
         userAnswers[currentIdx] = {
             question: q.question,
-            selected: selected,
-            correct: q.answer,
-            isCorrect,
-            isMulti: false
+            selected: q.options[selected],
+            correct: q.options[q.answer],
+            isCorrect
         };
 
-        if (isCorrect) score++;
-
-        const allOptions = document.querySelectorAll('.option');
-        allOptions.forEach(opt => opt.style.pointerEvents = 'none');
-        markAnswer(userAnswers[currentIdx]);
+        if (isCorrect) { btn.classList.add('correct'); score++; }
+        else { btn.classList.add('wrong'); allBtns[q.answer].classList.add('correct'); }
 
         document.getElementById('next-btn').classList.remove('hidden');
-    }
-
-    // Submit for multi-select only
-    function submitAnswer() {
-        const q = questions[currentIdx];
-        const container = document.getElementById('options-container');
-        const inputs = container.querySelectorAll('input');
-        let selected = [];
-
-        inputs.forEach((input, i) => {
-            if (input.checked) selected.push(i);
-        });
-
-        if (selected.length === 0) return;
-
-        const correct = q.answer;
-        const isCorrect = JSON.stringify(selected.sort((a,b)=>a-b)) === JSON.stringify(correct.sort((a,b)=>a-b));
-
-        userAnswers[currentIdx] = {
-            question: q.question,
-            selected: selected,
-            correct: correct,
-            isCorrect,
-            isMulti: true
-        };
-
-        if (isCorrect) score++;
-
-        markAnswer(userAnswers[currentIdx]);
-        document.getElementById('submit-btn').classList.add('hidden');
-        document.getElementById('next-btn').classList.remove('hidden');
-    }
-
-    function markAnswer(ua) {
-        const container = document.getElementById('options-container');
-        const options = container.querySelectorAll('.option');
-        const correctSet = new Set(Array.isArray(ua.correct) ? ua.correct : [ua.correct]);
-
-        options.forEach((opt, i) => {
-            const isSelected = ua.selected.includes ? ua.selected.includes(i) : ua.selected === i;
-            const isCorrectOption = correctSet.has(i);
-
-            if (isCorrectOption) opt.classList.add('correct');
-            else if (isSelected) opt.classList.add('wrong');
-        });
     }
 
     function nextQuestion() { currentIdx++; loadQuestion(); window.scrollTo(0,0); }
     function prevQuestion() { if (currentIdx > 0) { currentIdx--; loadQuestion(); window.scrollTo(0,0); } }
 
+    // ---- Restart ----
     function restartQuiz() {
         currentIdx = 0; score = 0; userAnswers = [];
         questions = prepare(JSON.parse(JSON.stringify(originalQuestions)), activeQuiz);
@@ -1281,41 +1150,38 @@
         loadQuestion();
     }
 
+    // ---- Results ----
     function showResult() {
         document.getElementById('result-quiz-title').textContent = activeQuiz.title + ' — Results';
         document.getElementById('final-score').textContent = `${score}/${questions.length}`;
-        const pct = Math.round((score / questions.length) * 100);
+        const pct = Math.round((score/questions.length)*100);
         document.getElementById('result-msg').textContent =
             pct === 100 ? '🎉 Perfect score!' :
             pct >= 80 ? '🔥 Great job!' :
-            pct >= 60 ? '👍 Good effort!' : '📖 Keep studying!';
+            pct >= 60 ? '👍 Good effort!' :
+            '📖 Keep studying!';
 
         const ws = document.getElementById('wrong-section');
         const wrongs = userAnswers.filter(a => !a.isCorrect);
-
         if (wrongs.length === 0) {
             ws.innerHTML = '<h3>Review</h3><p style="color:var(--correct);margin-top:8px;">✓ All answers correct!</p>';
         } else {
             let html = '<h3>Review Wrong Answers</h3>';
             wrongs.forEach((wa, i) => {
-                const userAns = wa.isMulti 
-                    ? wa.selected.map(idx => String.fromCharCode(65 + idx)).join(', ')
-                    : String.fromCharCode(65 + wa.selected);
-                const correctAns = wa.isMulti 
-                    ? wa.correct.map(idx => String.fromCharCode(65 + idx)).join(', ')
-                    : String.fromCharCode(65 + wa.correct);
                 html += `<div class="wrong-item">
                     <div class="q">${i+1}. ${wa.question}</div>
-                    <div class="ans-wrong">✗ Your answer: ${userAns}</div>
-                    <div class="ans-correct">✓ Correct: ${correctAns}</div>
+                    <div class="ans-wrong">✗ Your answer: ${wa.selected}</div>
+                    <div class="ans-correct">✓ Correct: ${wa.correct}</div>
                 </div>`;
             });
             ws.innerHTML = html;
         }
+
         document.getElementById('progress-bar').style.width = '100%';
         show('result-screen');
     }
 
+    // ---- Init ----
     window.addEventListener('load', buildSelectScreen);
     window.onbeforeunload = () => activeQuiz ? "Reloading will reset your quiz progress." : undefined;
     </script>
